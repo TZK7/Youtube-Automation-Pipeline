@@ -1,0 +1,61 @@
+{
+  "topic": "psychology of power",
+  "title": "The Dark Psychology of psychology of power: How to Stay Unshakable",
+  "hook_statement": "THE UNSPOKEN RULE",
+  "scenes": [
+    {
+      "scene_number": 1,
+      "retention_stage": "Pattern Interrupt Hook (0-15s)",
+      "spoken_text": "Ever notice how most advice on psychology of power completely fails when real tension hits? Most people panic and freeze, giving away their leverage instantly.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in a modern high-rise office holding a clipboard, looking directly at camera with calm intense gaze, dim dramatic lighting",
+      "image_to_video_prompt": "Slow push in on character face, dramatic lighting shift",
+      "on_screen_text": "DON'T FREEZE IN CONFLICT",
+      "target_duration_sec": 7.5
+    },
+    {
+      "scene_number": 2,
+      "retention_stage": "Anti-Hook Reveal (15-30s)",
+      "spoken_text": "Here is the uncomfortable truth: aggressive confrontation isn't power. Silence is. When you master calculated stillness, the room shifts toward you.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., sitting at a sleek glass desk in a minimalist psychology laboratory, demonstrating a subtle hand gesture of calm authority",
+      "image_to_video_prompt": "Pan left around desk, character maintains calm eye contact",
+      "on_screen_text": "SILENCE IS POWER",
+      "target_duration_sec": 8.0
+    },
+    {
+      "scene_number": 3,
+      "retention_stage": "Scientific Mechanism (30-60s)",
+      "spoken_text": "Neurologically, when someone attempts a power play, your amygdala triggers an adrenaline spike. By taking a 2-second breath delay, you bypass emotional reaction and activate the prefrontal cortex.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., pointing to a glowing holographic brain diagram displaying active neural pathways in a dark futuristic study",
+      "image_to_video_prompt": "Slow tilt up from glowing brain diagram to character smile",
+      "on_screen_text": "AMYGDALA VS PREFRONTAL",
+      "target_duration_sec": 10.0
+    },
+    {
+      "scene_number": 4,
+      "retention_stage": "Value Bomb (60-70% mark)",
+      "spoken_text": "The exact script to reset dominance: pause, hold eye contact without blinking, and ask calmly, 'What outcome are you aiming for right now?'",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing before a chalkboard with gold behavioral flowchart notes, making an empowering open-palm gesture",
+      "image_to_video_prompt": "Smooth rack focus from flowchart notes to character",
+      "on_screen_text": "THE REFRAME SCRIPT",
+      "target_duration_sec": 8.5
+    },
+    {
+      "scene_number": 5,
+      "retention_stage": "Application & Stakes",
+      "spoken_text": "When you apply this frame, you shift from defensive response to executive control. You preserve your energy while forcing the other party to reveal their intent.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., walking confidently through a bright modern gallery corridor with soft ambient lighting",
+      "image_to_video_prompt": "Tracking shot following character walking toward camera",
+      "on_screen_text": "EXECUTIVE CONTROL",
+      "target_duration_sec": 7.5
+    },
+    {
+      "scene_number": 6,
+      "retention_stage": "Soft CTA",
+      "spoken_text": "Mastering human dynamics takes daily practice. Subscribe to Mindset Dynamics for deeper breakdowns on behavioral psychology every week.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in warm studio lighting next to a sleek subscribe graphic icon, smiling invitingly",
+      "image_to_video_prompt": "Slow zoom out revealing channel subscribe badge",
+      "on_screen_text": "SUBSCRIBE FOR PSYCHOLOGY",
+      "target_duration_sec": 6.5
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "channel_name": "Behavioral Psychology Insights",
+  "niche": "Behavioral Psychology, Mindset, and Human Dynamics",
+  "voice_settings": {
+    "tts_model": "edge-tts",
+    "voice_id": "en-US-ChristopherNeural",
+    "speed": "15%",
+    "pitch": "+0Hz"
+  },
+  "visual_settings": {
+    "aspect_ratio": "16:9",
+    "art_style_prompt": "modern webcomic vector style, clean lines, flat shading"
+  },
+  "character_anchor": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading.",
+  "reference_image_paths": [
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_2d09d709-6960-4bde-986b-026b39d7856f.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_8c99eb3c-9865-4423-b91a-40aab430daa9.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_8d5e3f86-7869-4ca5-9209-9c3aec53c924.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_32cbed67-03a2-44a1-9a96-6e3066ed4d96.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_135d4338-0cd9-450a-ae61-3d35736a5943.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_184497e5-4e3f-4f36-b38b-d5701d3e3b06.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_53adc143-c333-499c-9e7d-f7d6389a99c4.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_73dc9d1d-53f3-4c39-b97c-3d68eb23e836.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_79be5406-d50b-4ce3-842a-f8a293e1b950.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_391f2801-ec1b-4d0b-88d3-ee75934f04d4.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_7073e369-1efd-4dbc-b757-73f0c3795822.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_c6e10c9f-6e8d-4046-9296-66abd48adff4.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_c49c4123-96a6-4806-9a1f-f35d893cb2c4.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_1ee49485-6410-4ca1-9b97-93d206d71305.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_72e2d4a8-9871-4766-a677-5ee5bf239021.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_9788d181-f52b-460c-bf02-277032902409.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_bffa450e-ab9a-4414-897e-bf43d68f2fb9.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_df9ea026-9a39-49da-bd59-5ff88a28c62f.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_0_f6b1a012-8443-4860-a26c-93bf6b5f32da.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_0dff6fb3-9c81-4abd-8078-2ac28aa372db.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_3b2d4936-b53b-48a3-982d-f5cf84a08193.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_42bd75f4-fff0-4058-a0bd-649d4304b5c2.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_184a740c-58e8-4719-9f38-a550b64d2208.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_aa161b0b-c620-4dd6-be29-ec194a630efd.jpg",
+    "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_c446731d-306a-4a2f-ab14-2fd5203e3ddc.jpg"
+  ]
+}

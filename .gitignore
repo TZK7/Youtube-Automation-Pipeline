@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual Environment
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test files
+test_fresh.py
+test_*.py
+
+# Data (regenerated at runtime)
+data/competitor_insights.json
+
+# Large media assets (generated at runtime)
+data/audio_assets/
+data/video_assets/
+data/outputs/
+data/reference_images/
+ready_to_upload/
