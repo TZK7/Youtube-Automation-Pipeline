@@ -361,6 +361,52 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
             "prompt": image_prompt
         })
 
+        # Granular per-scene Visual Audit Trail logging
+        s_id = session_id or api_config.get("session_id")
+        if s_id:
+            try:
+                from backend.session_manager import SessionManager
+                sm = SessionManager()
+                
+                # Log Image Gen per scene
+                sm.log_api_call(
+                    session_id=s_id,
+                    step=f"VISUAL_IMAGE_SCENE_{idx:02d}",
+                    service="OpenRouter Image Gen (Grok/Seedream)" if openrouter_api_key else "Local Vector Canvas",
+                    request_data={
+                        "scene_number": idx,
+                        "prompt": image_prompt
+                    },
+                    response_data={
+                        "status": "SUCCESS" if os.path.exists(image_file) else "FALLBACK",
+                        "image_path": image_file if os.path.exists(image_file) else None,
+                        "file_size_bytes": os.path.getsize(image_file) if os.path.exists(image_file) else 0
+                    },
+                    status="SUCCESS" if os.path.exists(image_file) else "FALLBACK",
+                    duration_sec=0.0
+                )
+                
+                # Log Video Clip per scene
+                sm.log_api_call(
+                    session_id=s_id,
+                    step=f"VISUAL_VIDEO_SCENE_{idx:02d}",
+                    service="ByteDance Seedance 1.5 Pro (OpenRouter)" if (openrouter_api_key and grok_success) else "MoviePy Animator",
+                    request_data={
+                        "scene_number": idx,
+                        "motion_prompt": motion_prompt,
+                        "duration_sec": duration_sec
+                    },
+                    response_data={
+                        "status": "SUCCESS" if grok_success else "FALLBACK",
+                        "video_path": output_file,
+                        "file_size_bytes": os.path.getsize(output_file) if os.path.exists(output_file) else 0
+                    },
+                    status="SUCCESS" if grok_success else "FALLBACK",
+                    duration_sec=round(duration_sec, 2)
+                )
+            except Exception as e_sm:
+                print(f"[-] Session logging warning for video scene {idx}: {e_sm}")
+
     # Session Management & Audit Logging
     s_id = session_id or api_config.get("session_id")
     if s_id:

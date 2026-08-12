@@ -152,15 +152,15 @@ else:
                     })
                 st.dataframe(pd.DataFrame(df_audit), use_container_width=True)
                 
-                # Expandable detailed inspector for each API log entry
-                with st.expander("🔍 Detailed Raw Request & Response Inspector"):
+                # Detailed inspector toggle (uses checkbox instead of nested expander)
+                if st.checkbox("🔍 Inspect Raw Request & Response Payloads", key=f"inspect_{s_id}"):
                     for idx_a, entry in enumerate(audit_entries, 1):
-                        st.markdown(f"#### Entry #{idx_a}: `{entry.get('service')}` — Status: `{entry.get('status')}` ({entry.get('duration_sec')}s)")
+                        st.markdown(f"#### Entry #{idx_a}: `{entry.get('step')}` — `{entry.get('service')}` (Status: `{entry.get('status')}` | Duration: `{entry.get('duration_sec')}s`)")
                         c_req, c_resp = st.columns(2)
                         with c_req:
-                            st.markdown("**📤 Request Payload / Prompt:**")
+                            st.markdown("**📤 Request Payload / Spoken Text / Prompt:**")
                             st.json(entry.get("request", {}))
                         with c_resp:
-                            st.markdown("**📥 Response Output / Data:**")
+                            st.markdown("**📥 Response Output / Saved Data:**")
                             st.json(entry.get("response", {}))
                         st.markdown("---")

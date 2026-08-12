@@ -182,7 +182,35 @@ def generate_audio(script_data, voice_settings=None, output_dir=None, session_id
             "duration_sec": duration_sec
         })
 
-    # Session Management & Audit Logging
+        # Granular per-scene TTS Audit Trail logging
+        s_id = session_id or voice_settings.get("session_id")
+        if s_id:
+            try:
+                from backend.session_manager import SessionManager
+                sm = SessionManager()
+                sm.log_api_call(
+                    session_id=s_id,
+                    step=f"AUDIO_TTS_SCENE_{idx:02d}",
+                    service="Fish Audio (OpenRouter)" if (openrouter_api_key and "mp3" in output_path) else f"Edge TTS ({voice_id})",
+                    request_data={
+                        "scene_number": idx,
+                        "spoken_text": spoken_text,
+                        "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts",
+                        "voice_id": fish_voice if openrouter_api_key else voice_id
+                    },
+                    response_data={
+                        "status": "SUCCESS" if synthesized else "FALLBACK",
+                        "audio_path": output_path,
+                        "duration_sec": round(duration_sec, 2),
+                        "file_size_bytes": os.path.getsize(output_path) if os.path.exists(output_path) else 0
+                    },
+                    status="SUCCESS" if synthesized else "FALLBACK",
+                    duration_sec=round(duration_sec, 2)
+                )
+            except Exception as e_sm:
+                print(f"[-] Session logging warning for audio scene {idx}: {e_sm}")
+
+    # Session Management Checkpoint & Summary Logging
     s_id = session_id or voice_settings.get("session_id")
     if s_id:
         try:
@@ -192,12 +220,11 @@ def generate_audio(script_data, voice_settings=None, output_dir=None, session_id
             
             sm.log_api_call(
                 session_id=s_id,
-                step="AUDIO_SYNTHESIS",
+                step="AUDIO_SYNTHESIS_SUMMARY",
                 service="Fish Audio (OpenRouter)" if openrouter_api_key else f"Edge TTS ({voice_id})",
                 request_data={
-                    "scene_count": len(scenes),
-                    "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts",
-                    "voice_id": fish_voice if openrouter_api_key else voice_id
+                    "total_scenes": len(scenes),
+                    "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts"
                 },
                 response_data={
                     "status": "SUCCESS",
@@ -208,6 +235,6 @@ def generate_audio(script_data, voice_settings=None, output_dir=None, session_id
                 duration_sec=round(sum(a["duration_sec"] for a in audio_results), 2)
             )
         except Exception as e_sm:
-            print(f"[-] Session logging warning for audio: {e_sm}")
+            print(f"[-] Session logging warning for audio summary: {e_sm}")
 
     return audio_results

@@ -223,6 +223,25 @@ with tab3:
                         st.video(v["video_path"])
                     st.caption(f"Prompt: {v['prompt'][:120]}...")
                 st.markdown("---")
+            
+            # Granular per-scene audit trail feed
+            st.subheader("📋 Granular Per-Scene Generation Audit Trail")
+            sess_audit = sm.get_audit_trail(sess_id)
+            if sess_audit:
+                df_audit_p = []
+                for entry in sess_audit:
+                    df_audit_p.append({
+                        "Time": entry.get("timestamp", "")[11:19],
+                        "Step": entry.get("step"),
+                        "Service / API": entry.get("service"),
+                        "Status": entry.get("status"),
+                        "Duration (s)": entry.get("duration_sec"),
+                        "Request Summary": str(entry.get("request"))[:80] + "...",
+                        "Response Summary": str(entry.get("response"))[:80] + "..."
+                    })
+                st.dataframe(pd.DataFrame(df_audit_p), use_container_width=True)
+            else:
+                st.info("No scene logs recorded for this session yet.")
     else:
         st.warning("Please generate a script in Tab 1 first.")
 

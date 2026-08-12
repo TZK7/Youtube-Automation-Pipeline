@@ -1,60 +1,61 @@
 {
-  "title": "How to Spot Dark Psychology (Without Confrontation)",
-  "hook_statement": "Silent Defense Secrets",
+  "topic": "Dark Psychology",
+  "title": "The Dark Psychology of Dark Psychology: How to Stay Unshakable",
+  "hook_statement": "THE UNSPOKEN RULE",
   "scenes": [
     {
       "scene_number": 1,
-      "retention_stage": "Part 1: Pattern Interrupt Hook (0-15s)",
-      "spoken_text": "Someone is quietly rewriting your memory right now, and you\u2019re letting them do it because you hate conflict. It's called gaslighting, but pointing it out only starts a massive argument. What if you could disarm this dark psychology trick completely in silence, without ever raising your voice?",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A dimly lit, moody room with a single overhead hanging lamp casting long shadows over a wooden table. Subtle dust particles floating in the light beam.",
-      "image_to_video_prompt": "Slow push in on the hanging lamp, dust particles drifting across the lens.",
-      "on_screen_text": "Silent manipulation.",
-      "target_duration_sec": 15.0
+      "retention_stage": "Pattern Interrupt Hook (0-15s)",
+      "spoken_text": "Ever notice how most advice on Dark Psychology completely fails when real tension hits? Most people panic and freeze, giving away their leverage instantly.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in a modern high-rise office holding a clipboard, looking directly at camera with calm intense gaze, dim dramatic lighting",
+      "image_to_video_prompt": "Slow push in on character face, dramatic lighting shift",
+      "on_screen_text": "DON'T FREEZE IN CONFLICT",
+      "target_duration_sec": 7.5
     },
     {
       "scene_number": 2,
-      "retention_stage": "Part 2: Anti-Hook Reveal (15-30s)",
-      "spoken_text": "We aren't going to give you generic advice like 'just walk away.' Instead, you are getting a practical, step-by-step breakdown of the exact psychological defense mechanisms to neutralize manipulators instantly, keeping you completely safe from confrontation.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A modern minimalist office space with clean lines, large glass windows showing a soft blurred city skyline at dusk, cool blue tones.",
-      "image_to_video_prompt": "Slow pan right across the sleek glass partition and reflective surfaces.",
-      "on_screen_text": "The defense blueprint.",
-      "target_duration_sec": 15.0
+      "retention_stage": "Anti-Hook Reveal (15-30s)",
+      "spoken_text": "Here is the uncomfortable truth: aggressive confrontation isn't power. Silence is. When you master calculated stillness, the room shifts toward you.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., sitting at a sleek glass desk in a minimalist psychology laboratory, demonstrating a subtle hand gesture of calm authority",
+      "image_to_video_prompt": "Pan left around desk, character maintains calm eye contact",
+      "on_screen_text": "SILENCE IS POWER",
+      "target_duration_sec": 8.0
     },
     {
       "scene_number": 3,
-      "retention_stage": "Part 3: Scientific Mechanism (30-60s)",
-      "spoken_text": "Manipulators rely on cognitive dissonance. When they lie, they expect you to either believe them or fight. By refusing to do either, you break their psychological script. Neurologically, this triggers an error state in their brain, forcing them to back down to regain control.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., An abstract, glowing 3D network of neural pathways firing with blue and gold light pulses against a dark background.",
-      "image_to_video_prompt": "Slow zoom into the center of the neural network as light pulses travel down the pathways.",
-      "on_screen_text": "Break their script.",
-      "target_duration_sec": 30.0
+      "retention_stage": "Scientific Mechanism (30-60s)",
+      "spoken_text": "Neurologically, when someone attempts a power play, your amygdala triggers an adrenaline spike. By taking a 2-second breath delay, you bypass emotional reaction and activate the prefrontal cortex.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., pointing to a glowing holographic brain diagram displaying active neural pathways in a dark futuristic study",
+      "image_to_video_prompt": "Slow tilt up from glowing brain diagram to character smile",
+      "on_screen_text": "AMYGDALA VS PREFRONTAL",
+      "target_duration_sec": 10.0
     },
     {
       "scene_number": 4,
-      "retention_stage": "Part 4: Value Bomb (60-70% mark)",
-      "spoken_text": "Here is the practical breakdown: use the 'Gray Rock' method combined with 'Factual Echoing.' When they twist the truth, repeat their exact words back to them as a calm question. No anger, no emotion. Just say, 'So you are saying...' and let the silence do the heavy lifting.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A minimalist stone sculpture sitting on a dark reflective surface, surrounded by soft, dramatic side-lighting.",
-      "image_to_video_prompt": "Slow push in on the stone sculpture, shadows shifting slightly across its surface.",
-      "on_screen_text": "Factual echoing technique.",
-      "target_duration_sec": 30.0
+      "retention_stage": "Value Bomb (60-70% mark)",
+      "spoken_text": "The exact script to reset dominance: pause, hold eye contact without blinking, and ask calmly, 'What outcome are you aiming for right now?'",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing before a chalkboard with gold behavioral flowchart notes, making an empowering open-palm gesture",
+      "image_to_video_prompt": "Smooth rack focus from flowchart notes to character",
+      "on_screen_text": "THE REFRAME SCRIPT",
+      "target_duration_sec": 8.5
     },
     {
       "scene_number": 5,
-      "retention_stage": "Part 5: Application & Stakes",
-      "spoken_text": "If you keep trying to keep the peace by staying silent, they will slowly erode your self-trust until you rely entirely on their version of reality. But once you apply this simple verbal echo, you reclaim your mental space without ever starting a fight.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A glass chess set on a dark table, with one key chess piece reflecting a warm, bright light while others remain in shadow.",
-      "image_to_video_prompt": "Slow tracking shot across the chess board, focusing on the illuminated piece.",
-      "on_screen_text": "Reclaim your mind.",
-      "target_duration_sec": 20.0
+      "retention_stage": "Application & Stakes",
+      "spoken_text": "When you apply this frame, you shift from defensive response to executive control. You preserve your energy while forcing the other party to reveal their intent.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., walking confidently through a bright modern gallery corridor with soft ambient lighting",
+      "image_to_video_prompt": "Tracking shot following character walking toward camera",
+      "on_screen_text": "EXECUTIVE CONTROL",
+      "target_duration_sec": 7.5
     },
     {
       "scene_number": 6,
-      "retention_stage": "Part 6: Soft CTA",
-      "spoken_text": "You don't have to be loud to be powerful. Subscribe to master these quiet psychological boundaries, and drop a comment below if you've ever felt trapped by someone's mind games.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A calm, serene library with rows of dark wooden bookshelves and a single soft reading light glowing in the distance.",
-      "image_to_video_prompt": "Slow crane down through the quiet library aisle toward the glowing light.",
-      "on_screen_text": "Master quiet power.",
-      "target_duration_sec": 10.0
+      "retention_stage": "Soft CTA",
+      "spoken_text": "Mastering human dynamics takes daily practice. Subscribe to Mindset Dynamics for deeper breakdowns on behavioral psychology every week.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in warm studio lighting next to a sleek subscribe graphic icon, smiling invitingly",
+      "image_to_video_prompt": "Slow zoom out revealing channel subscribe badge",
+      "on_screen_text": "SUBSCRIBE FOR PSYCHOLOGY",
+      "target_duration_sec": 6.5
     }
   ]
 }
