@@ -76,7 +76,7 @@ def _generate_grok_image(prompt, output_path, api_key):
 
 def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_poll_seconds=180):
     """
-    Generates a video from an image using Grok via OpenRouter API.
+    Generates a video from an image using ByteDance Seedance via OpenRouter API.
     This is an async job-based workflow:
       1. Submit job with first_frame image + motion prompt
       2. Poll status until completed or failed
@@ -106,7 +106,7 @@ def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_po
             "https://openrouter.ai/api/v1/videos",
             headers=headers,
             json={
-                "model": "x-ai/grok-imagine-video",
+                "model": "bytedance/seedance-1-5-pro",
                 "prompt": motion_prompt,
                 "frame_images": [{
                     "type": "image_url",
@@ -133,7 +133,7 @@ def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_po
             print(f"    [✗] Grok Video API: No polling URL returned. Response: {job_data}")
             return False
         
-        print(f"    [→] Video job submitted: {job_id}. Polling for completion...")
+        print(f"    [→] Seedance video job submitted: {job_id}. Polling for completion...")
         
         # Step 2: Poll until complete
         poll_interval = 5
