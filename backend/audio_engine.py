@@ -56,13 +56,13 @@ def _synthesize_fish_audio(text, voice_id, output_file, api_key):
         if resp.status_code == 200 and len(resp.content) > 100:
             with open(output_file, "wb") as f:
                 f.write(resp.content)
-            print(f"    [✓] Fish Audio TTS success: {len(resp.content)} bytes")
+            print(f"    [+] Fish Audio TTS success: {len(resp.content)} bytes")
             return True
         else:
-            print(f"    [✗] Fish Audio TTS returned status {resp.status_code}: {resp.text[:200]}")
+            print(f"    [-] Fish Audio TTS returned status {resp.status_code}: {resp.text[:200]}")
             return False
     except Exception as e:
-        print(f"    [✗] Fish Audio TTS error: {e}")
+        print(f"    [-] Fish Audio TTS error: {e}")
         return False
 
 

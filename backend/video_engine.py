@@ -8,70 +8,76 @@ from PIL import Image, ImageDraw, ImageFont
 
 def _generate_grok_image(prompt, output_path, api_key):
     """
-    Generates an image using Grok via OpenRouter API.
+    Generates an image using OpenRouter Image Gen API.
+    Tries Grok Imagine Image 2.0 first, with Seedream 4.5 fallback for maximum reliability & speed.
     Saves the decoded image to output_path (PNG).
     Returns True on success, False on failure.
     """
-    try:
-        resp = requests.post(
-            "https://openrouter.ai/api/v1/images",
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://youtube-automation-pipeline.local",
-                "X-Title": "YouTube Automation Pipeline"
-            },
-            json={
-                "model": "x-ai/grok-imagine-image-2.0",
-                "prompt": prompt,
-                "resolution": "1K",
-                "aspect_ratio": "16:9",
-                "n": 1
-            },
-            timeout=120
-        )
-        
-        if resp.status_code != 200:
-            print(f"    [✗] Grok Image API returned status {resp.status_code}: {resp.text[:300]}")
-            return False
-        
-        data = resp.json()
-        images = data.get("data", [])
-        if not images:
-            print(f"    [✗] Grok Image API returned empty data array")
-            return False
-        
-        # Get image data - could be base64 or data URI
-        img_data = images[0]
-        b64_str = img_data.get("b64_json", "")
-        
-        if not b64_str:
-            url_str = img_data.get("url", "")
-            if url_str.startswith("data:image"):
-                # Extract base64 from data URI
-                b64_str = url_str.split(",", 1)[1] if "," in url_str else ""
-            elif url_str.startswith("http"):
-                # Direct URL download
-                img_resp = requests.get(url_str, timeout=30)
-                if img_resp.status_code == 200:
-                    with open(output_path, "wb") as f:
-                        f.write(img_resp.content)
-                    print(f"    [✓] Grok Image downloaded: {len(img_resp.content)} bytes")
-                    return True
-        
-        if b64_str:
-            img_bytes = base64.b64decode(b64_str)
-            with open(output_path, "wb") as f:
-                f.write(img_bytes)
-            print(f"    [✓] Grok Image generated: {len(img_bytes)} bytes -> {os.path.basename(output_path)}")
-            return True
-        
-        print(f"    [✗] Grok Image API: Could not extract image data from response")
-        return False
-        
-    except Exception as e:
-        print(f"    [✗] Grok Image generation error: {e}")
-        return False
+    models = [
+        "x-ai/grok-imagine-image-2.0",
+        "bytedance-seed/seedream-4.5",
+        "qwen/qwen-image-3-pro",
+        "black-forest-labs/flux.2-flex"
+    ]
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://youtube-automation-pipeline.local",
+        "X-Title": "YouTube Automation Pipeline"
+    }
+    
+    for model_name in models:
+        try:
+            print(f"    [>] Requesting image with model '{model_name}'...")
+            resp = requests.post(
+                "https://openrouter.ai/api/v1/images",
+                headers=headers,
+                json={
+                    "model": model_name,
+                    "prompt": prompt
+                },
+                timeout=45
+            )
+            
+            if resp.status_code != 200:
+                print(f"    [-] Model {model_name} returned status {resp.status_code}: {resp.text[:200]}")
+                continue
+            
+            data = resp.json()
+            images = data.get("data", [])
+            if not images:
+                print(f"    [-] Model {model_name} returned empty data array")
+                continue
+            
+            img_data = images[0]
+            b64_str = img_data.get("b64_json", "")
+            
+            if not b64_str:
+                url_str = img_data.get("url", "")
+                if url_str.startswith("data:image"):
+                    b64_str = url_str.split(",", 1)[1] if "," in url_str else ""
+                elif url_str.startswith("http"):
+                    img_resp = requests.get(url_str, timeout=30)
+                    if img_resp.status_code == 200:
+                        with open(output_path, "wb") as f:
+                            f.write(img_resp.content)
+                        print(f"    [+] Image downloaded via {model_name}: {len(img_resp.content)} bytes")
+                        return True
+            
+            if b64_str:
+                img_bytes = base64.b64decode(b64_str)
+                with open(output_path, "wb") as f:
+                    f.write(img_bytes)
+                print(f"    [+] Image generated via {model_name}: {len(img_bytes)} bytes -> {os.path.basename(output_path)}")
+                return True
+                
+        except Exception as e:
+            print(f"    [-] Model {model_name} request error: {e}")
+            continue
+            
+    print(f"    [-] All image generation models failed")
+    return False
 
 
 def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_poll_seconds=180):
@@ -80,15 +86,20 @@ def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_po
     This is an async job-based workflow:
       1. Submit job with first_frame image + motion prompt
       2. Poll status until completed or failed
-      3. Download resulting MP4
+      3. Download resulting MP4 (without Bearer header for CDN/S3 compatibility)
     Returns True on success, False on failure.
     """
+    models_to_try = [
+        "bytedance/seedance-1-5-pro",
+        "bytedance/seedance-2.5",
+        "x-ai/grok-imagine-video-1.5"
+    ]
+    
     try:
         # Read and encode local image as base64 data URI
         with open(image_path, "rb") as f:
             img_bytes = f.read()
         
-        # Determine image format from extension
         ext = os.path.splitext(image_path)[1].lower()
         mime = "image/png" if ext == ".png" else "image/jpeg"
         b64 = base64.b64encode(img_bytes).decode("utf-8")
@@ -101,39 +112,42 @@ def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_po
             "X-Title": "YouTube Automation Pipeline"
         }
         
-        # Step 1: Submit video generation job
-        submit_resp = requests.post(
-            "https://openrouter.ai/api/v1/videos",
-            headers=headers,
-            json={
-                "model": "bytedance/seedance-1-5-pro",
-                "prompt": motion_prompt,
-                "frame_images": [{
-                    "type": "image_url",
-                    "image_url": {"url": data_uri},
-                    "frame_type": "first_frame"
-                }],
-                "aspect_ratio": "16:9"
-            },
-            timeout=60
-        )
+        job_id = None
+        polling_url = None
         
-        if submit_resp.status_code not in (200, 201, 202):
-            print(f"    [✗] Grok Video API submit returned status {submit_resp.status_code}: {submit_resp.text[:300]}")
-            return False
-        
-        job_data = submit_resp.json()
-        job_id = job_data.get("id", "")
-        polling_url = job_data.get("polling_url", "")
-        
-        if not polling_url and job_id:
-            polling_url = f"https://openrouter.ai/api/v1/videos/{job_id}"
+        for model_name in models_to_try:
+            print(f"    [>] Submitting video job with model '{model_name}'...")
+            submit_resp = requests.post(
+                "https://openrouter.ai/api/v1/videos",
+                headers=headers,
+                json={
+                    "model": model_name,
+                    "prompt": motion_prompt,
+                    "frame_images": [{
+                        "type": "image_url",
+                        "image_url": {"url": data_uri},
+                        "frame_type": "first_frame"
+                    }],
+                    "aspect_ratio": "16:9"
+                },
+                timeout=60
+            )
+            
+            if submit_resp.status_code in (200, 201, 202):
+                job_data = submit_resp.json()
+                job_id = job_data.get("id", "")
+                polling_url = job_data.get("polling_url", "")
+                if not polling_url and job_id:
+                    polling_url = f"https://openrouter.ai/api/v1/videos/{job_id}"
+                if polling_url:
+                    print(f"    [+] Video job submitted ({model_name}): {job_id}. Polling for completion...")
+                    break
+            else:
+                print(f"    [-] Video model {model_name} submit returned status {submit_resp.status_code}: {submit_resp.text[:150]}")
         
         if not polling_url:
-            print(f"    [✗] Grok Video API: No polling URL returned. Response: {job_data}")
+            print(f"    [-] Video generation: No video job could be submitted")
             return False
-        
-        print(f"    [→] Seedance video job submitted: {job_id}. Polling for completion...")
         
         # Step 2: Poll until complete
         poll_interval = 5
@@ -147,41 +161,42 @@ def _generate_grok_video(image_path, motion_prompt, output_path, api_key, max_po
                 status = poll_data.get("status", "unknown")
                 
                 if status == "completed":
-                    # Step 3: Download the video
                     video_urls = poll_data.get("unsigned_urls", [])
                     if not video_urls:
                         video_urls = poll_data.get("urls", [])
                     
                     if video_urls:
-                        video_resp = requests.get(video_urls[0], timeout=120)
+                        # Download WITHOUT OpenRouter Bearer header to avoid 401 S3 signature mismatch
+                        download_headers = {"User-Agent": "Mozilla/5.0"}
+                        video_resp = requests.get(video_urls[0], headers=download_headers, timeout=120)
                         if video_resp.status_code == 200 and len(video_resp.content) > 1000:
                             with open(output_path, "wb") as f:
                                 f.write(video_resp.content)
-                            print(f"    [✓] Grok Video downloaded: {len(video_resp.content)} bytes -> {os.path.basename(output_path)}")
+                            print(f"    [+] Video downloaded: {len(video_resp.content)} bytes -> {os.path.basename(output_path)}")
                             return True
                         else:
-                            print(f"    [✗] Video download failed: status {video_resp.status_code}")
+                            print(f"    [-] Video download failed: status {video_resp.status_code}")
                             return False
                     else:
-                        print(f"    [✗] Completed but no video URLs in response: {poll_data}")
+                        print(f"    [-] Completed but no video URLs in response: {poll_data}")
                         return False
                         
                 elif status == "failed":
                     error_msg = poll_data.get("error", poll_data.get("message", "Unknown error"))
-                    print(f"    [✗] Video generation failed: {error_msg}")
+                    print(f"    [-] Video generation failed: {error_msg}")
                     return False
                 else:
                     if attempt % 3 == 0:
-                        print(f"    [→] Status: {status} (poll {attempt + 1}/{max_polls})...")
+                        print(f"    [>] Status: {status} (poll {attempt + 1}/{max_polls})...")
                         
             except Exception as e_poll:
-                print(f"    [!] Poll error (attempt {attempt + 1}): {e_poll}")
+                print(f"    [-] Poll error (attempt {attempt + 1}): {e_poll}")
         
-        print(f"    [✗] Video generation timed out after {max_poll_seconds}s")
+        print(f"    [-] Video generation timed out after {max_poll_seconds}s")
         return False
         
     except Exception as e:
-        print(f"    [✗] Grok Video generation error: {e}")
+        print(f"    [-] Video generation error: {e}")
         return False
 
 
@@ -190,26 +205,23 @@ def _create_vector_webcomic_frame(prompt, scene_num, frame_index, total_frames, 
     Generates a stylized modern webcomic vector canvas frame matching the character anchor & prompt.
     Used as fallback when OpenRouter API is unavailable.
     """
-    # Color palette tailored for Behavioral Psychology vector webcomic
     backgrounds = [
-        ((25, 30, 45), (45, 55, 80)),      # Deep slate blue gradient
-        ((35, 25, 45), (70, 50, 85)),      # Dark violet gradient
-        ((20, 35, 40), (40, 75, 85)),      # Dark teal gradient
-        ((40, 30, 25), (85, 60, 45)),      # Dark warm bronze gradient
+        ((25, 30, 45), (45, 55, 80)),
+        ((35, 25, 45), (70, 50, 85)),
+        ((20, 35, 40), (40, 75, 85)),
+        ((40, 30, 25), (85, 60, 45)),
     ]
     bg_start, bg_end = backgrounds[(scene_num - 1) % len(backgrounds)]
     
     img = Image.new("RGB", (width, height))
     draw = ImageDraw.Draw(img)
     
-    # Linear gradient background
     for y in range(height):
         r = int(bg_start[0] + (bg_end[0] - bg_start[0]) * (y / height))
         g = int(bg_start[1] + (bg_end[1] - bg_start[1]) * (y / height))
         b = int(bg_start[2] + (bg_end[2] - bg_start[2]) * (y / height))
         draw.line([(0, y), (width, y)], fill=(r, g, b))
         
-    # Animated subtle floating tech/psychology vector grid lines
     t = frame_index / max(1, total_frames)
     offset_x = int(math.sin(t * math.pi * 2) * 20)
     offset_y = int(math.cos(t * math.pi * 2) * 15)
@@ -219,10 +231,8 @@ def _create_vector_webcomic_frame(prompt, scene_num, frame_index, total_frames, 
     for y in range(0, height, 120):
         draw.line([(0, y + offset_y), (width, y + offset_y)], fill=(100, 150, 200), width=1)
         
-    # Center character vector frame representation
     center_x, center_y = width // 2 + offset_x, height // 2 + offset_y
     
-    # Stylized webcomic character outline
     draw.ellipse([center_x - 120, center_y - 250, center_x + 120, center_y - 10], fill=(245, 215, 180), outline=(20, 20, 30), width=6)
     draw.chord([center_x - 140, center_y - 290, center_x + 140, center_y - 120], start=180, end=360, fill=(240, 205, 75), outline=(20, 20, 30), width=6)
     draw.ellipse([center_x - 70, center_y - 160, center_x - 20, center_y - 120], fill=(255, 255, 255), outline=(40, 40, 60), width=4)
@@ -260,12 +270,8 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
     Generates video clips (scene_01.mp4, scene_02.mp4) synchronized to each audio segment.
     
     Priority order:
-      1. Grok Image Gen + Grok Image-to-Video via OpenRouter (if openrouter_api_key provided)
+      1. OpenRouter Image Gen (Grok Imagine Image 2.0 / Seedream 4.5) + ByteDance Seedance Image-to-Video
       2. Local PIL vector animation fallback
-    
-    When using OpenRouter:
-      - scene_01.png is generated via Grok image gen (kept for reference/thumbnails)
-      - scene_01.mp4 is generated via Grok image-to-video
     """
     if visual_settings is None:
         visual_settings = {}
@@ -282,7 +288,7 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
     video_results = []
     
     if openrouter_api_key:
-        print(f"[+] Generating visual assets for {len(scenes)} scenes using Grok (OpenRouter)...")
+        print(f"[+] Generating visual assets for {len(scenes)} scenes using OpenRouter AI...")
     else:
         print(f"[+] Generating visual assets for {len(scenes)} scenes using local vector animation...")
     
@@ -296,31 +302,27 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
         
         grok_success = False
         
-        # --- Priority 1: Grok Image Gen + Image-to-Video via OpenRouter ---
+        # --- Priority 1: Grok/Seedream Image Gen + Seedance Image-to-Video via OpenRouter ---
         if openrouter_api_key:
-            print(f"  [>] Scene {idx}: Generating image with Grok...")
-            
-            # Step 1: Generate image
+            print(f"  [>] Scene {idx}: Generating AI image...")
             image_ok = _generate_grok_image(image_prompt, image_file, openrouter_api_key)
             
             if image_ok:
-                # Step 2: Convert image to video
-                print(f"  [>] Scene {idx}: Converting image to video with Grok...")
+                print(f"  [>] Scene {idx}: Converting AI image to video clip...")
                 full_motion_prompt = f"{motion_prompt}. {image_prompt[:100]}"
                 video_ok = _generate_grok_video(image_file, full_motion_prompt, output_file, openrouter_api_key)
                 
                 if video_ok:
                     grok_success = True
                 else:
-                    print(f"  [!] Scene {idx}: Grok video generation failed, creating video from still image...")
-                    # Fallback: create a simple video from the still image using moviepy
+                    print(f"  [-] Scene {idx}: Video generation model failed, creating video clip from generated AI image...")
                     try:
                         _create_video_from_still(image_file, output_file, duration_sec)
                         grok_success = True
                     except Exception as e_still:
-                        print(f"  [!] Scene {idx}: Still image video fallback also failed: {e_still}")
+                        print(f"  [-] Scene {idx}: Still image video fallback failed: {e_still}")
             else:
-                print(f"  [!] Scene {idx}: Grok image generation failed, falling back to local animation...")
+                print(f"  [-] Scene {idx}: AI image generation failed, falling back to local vector animation...")
         
         # --- Priority 2: Local PIL vector animation fallback ---
         if not grok_success:
@@ -363,8 +365,8 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
 
 def _create_video_from_still(image_path, output_path, duration_sec):
     """
-    Creates a simple video from a still image with a subtle Ken Burns zoom effect.
-    Used when Grok image gen succeeds but image-to-video fails.
+    Creates a video from a generated AI image with a subtle zoom/pan effect using MoviePy.
+    Used when AI image gen succeeds so the user ALWAYS gets their real generated AI visual!
     """
     try:
         from moviepy import ImageClip
@@ -373,7 +375,6 @@ def _create_video_from_still(image_path, output_path, duration_sec):
     
     clip = ImageClip(image_path)
     
-    # Set duration
     try:
         clip = clip.with_duration(duration_sec)
     except AttributeError:
