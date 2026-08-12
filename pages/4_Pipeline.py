@@ -8,18 +8,36 @@ from backend.video_engine import generate_video_assets
 from backend.assembly_engine import assemble_video
 from backend.packaging_engine import package_video
 
+from backend.session_manager import SessionManager
+
 st.set_page_config(page_title="Production Pipeline | YouTube Control Center", page_icon="🚀", layout="wide")
 
 st.title("🚀 Interactive Video Production Pipeline")
 st.caption("Generate Gemini 2.5 Script ➔ Human-in-the-Loop Edit ➔ Synthesize Assets ➔ Compile MoviePy Video")
 
 pm = ProfileManager()
+sm = SessionManager()
+
 active_profile = st.session_state.get("active_profile", pm.get_profile(st.session_state.get("active_profile_id", "default_psychology")))
 competitor_insights = st.session_state.get("competitor_insights", {"seed_topic": st.session_state.get("current_topic", "Dark Psychology")})
-
 topic = competitor_insights.get("seed_topic", "Dark Psychology").strip()
 
-st.info(f"**Active Channel Profile:** {active_profile.get('channel_name')} | **Topic:** {topic}")
+# Initialize or retrieve active session
+if "active_session_id" not in st.session_state or not st.session_state["active_session_id"]:
+    new_sess = sm.create_session(topic=topic, profile_id=active_profile.get("profile_id", "default_psychology"), profile_name=active_profile.get("channel_name", "Default Psychology"))
+    st.session_state["active_session_id"] = new_sess["session_id"]
+
+sess_id = st.session_state["active_session_id"]
+sess_meta = sm.get_session(sess_id)
+
+# --- QUICK SESSION BAR ---
+c_s1, c_s2 = st.columns([3, 1])
+with c_s1:
+    st.info(f"🆔 **Active Session:** `{sess_id}` | **Topic:** `{topic}` | **Status:** `{sess_meta.get('status') if sess_meta else 'ACTIVE'}`")
+with c_s2:
+    st.page_link("pages/5_Sessions.py", label="🗂️ Manage All Sessions", icon="📋")
+
+
 
 tab1, tab2, tab3, tab4 = st.tabs([
     "1️⃣ Script Generation",
@@ -52,7 +70,8 @@ with tab1:
                     topic=topic,
                     competitor_insights=competitor_insights,
                     channel_profile=active_profile,
-                    gemini_api_key=gem_key
+                    gemini_api_key=gem_key,
+                    session_id=sess_id
                 )
                 st.session_state["script_data"] = script_data
                 st.success("✅ Script Generated Successfully! Switch to Tab 2 to review and edit.")
@@ -146,7 +165,8 @@ with tab3:
                     
                     audio_assets = generate_audio(
                         script_data=st.session_state["script_data"],
-                        voice_settings=vs
+                        voice_settings=vs,
+                        session_id=sess_id
                     )
                     st.session_state["audio_assets"] = audio_assets
                     
@@ -159,7 +179,8 @@ with tab3:
                         script_data=st.session_state["script_data"],
                         audio_assets=audio_assets,
                         visual_settings=active_profile.get("visual_settings", {}),
-                        api_config=api_cfg
+                        api_config=api_cfg,
+                        session_id=sess_id
                     )
                     st.session_state["video_assets"] = video_assets
                     st.success("✅ Assets generated! Preview below.")
@@ -220,6 +241,11 @@ with tab4:
                         competitor_insights=competitor_insights
                     )
                     st.session_state["package_info"] = pkg_info
+                    
+                    # Update session status
+                    sm.update_status(sess_id, "PACKAGED", current_step="COMPLETED")
+                    sm.save_checkpoint(sess_id, "package_info", pkg_info)
+                    
                     st.success("✅ Final Video & Upload Bundle Complete!")
 
         if "final_video_path" in st.session_state and os.path.exists(st.session_state["final_video_path"]):

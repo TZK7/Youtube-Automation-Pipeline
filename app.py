@@ -149,10 +149,12 @@ with col4:
 st.markdown("---")
 st.subheader("⚡ Quick Navigation")
 st.write("Use the sidebar pages to navigate through the production modules:")
-c1, c2, c3 = st.columns(3)
+c1, c2, c3, c4 = st.columns(4)
 with c1:
     st.page_link("pages/2_Channel_Studio.py", label="Channel Studio", icon="⚙️")
 with c2:
     st.page_link("pages/3_Research.py", label="Market Intelligence", icon="🔍")
 with c3:
     st.page_link("pages/4_Pipeline.py", label="Script & Video Pipeline", icon="🚀")
+with c4:
+    st.page_link("pages/5_Sessions.py", label="Session Manager & Audit Logs", icon="🗂️")

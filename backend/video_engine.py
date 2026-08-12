@@ -265,13 +265,14 @@ def _create_vector_webcomic_frame(prompt, scene_num, frame_index, total_frames, 
     return img
 
 
-def generate_video_assets(script_data, audio_assets, visual_settings=None, output_dir=None, api_config=None):
+def generate_video_assets(script_data, audio_assets, visual_settings=None, output_dir=None, api_config=None, session_id=None):
     """
     Generates video clips (scene_01.mp4, scene_02.mp4) synchronized to each audio segment.
     
     Priority order:
       1. OpenRouter Image Gen (Grok Imagine Image 2.0 / Seedream 4.5) + ByteDance Seedance Image-to-Video
       2. Local PIL vector animation fallback
+    Logs audit trails and saves checkpoints if session_id is provided.
     """
     if visual_settings is None:
         visual_settings = {}
@@ -359,7 +360,36 @@ def generate_video_assets(script_data, audio_assets, visual_settings=None, outpu
             "duration_sec": duration_sec,
             "prompt": image_prompt
         })
-        
+
+    # Session Management & Audit Logging
+    s_id = session_id or api_config.get("session_id")
+    if s_id:
+        try:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            sm.save_checkpoint(s_id, "video_assets", video_results)
+            sm.update_status(s_id, "ASSETS_GENERATED", current_step="ASSEMBLY")
+            
+            sm.log_api_call(
+                session_id=s_id,
+                step="VISUAL_GENERATION",
+                service="Grok Image 2.0 & Seedance Video (OpenRouter)" if openrouter_api_key else "Local PIL Animator",
+                request_data={
+                    "scene_count": len(scenes),
+                    "image_model": "x-ai/grok-imagine-image-2.0 / bytedance-seed/seedream-4.5" if openrouter_api_key else "local-pil",
+                    "video_model": "bytedance/seedance-1-5-pro" if openrouter_api_key else "local-pil"
+                },
+                response_data={
+                    "status": "SUCCESS",
+                    "generated_count": len(video_results),
+                    "clips": [v["video_path"] for v in video_results]
+                },
+                status="SUCCESS",
+                duration_sec=round(sum(v["duration_sec"] for v in video_results), 2)
+            )
+        except Exception as e_sm:
+            print(f"[-] Session logging warning for video: {e_sm}")
+
     return video_results
 
 

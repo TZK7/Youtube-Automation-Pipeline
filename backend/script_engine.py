@@ -8,10 +8,11 @@ try:
 except Exception:
     pass
 
-def generate_script(topic, competitor_insights, channel_profile, gemini_api_key=None, output_dir=None):
+def generate_script(topic, competitor_insights, channel_profile, gemini_api_key=None, output_dir=None, session_id=None):
     """
     Generates a retention-focused YouTube script using Gemini 2.5 SDK.
     Prepends the channel profile's character_anchor to all ai_image_prompt fields.
+    Logs audit trails and saves checkpoints if session_id is provided.
     """
     safe_topic = str(topic).encode('ascii', 'ignore').decode('ascii') if topic else "Behavioral Psychology"
     print(f"[+] Generating script for topic: '{safe_topic}' with retention framework...")
@@ -161,6 +162,36 @@ Key Requirements:
     out_file = os.path.join(output_dir, "script_data.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(script_data, f, indent=2)
+
+    # Session Management & Audit Logging
+    if session_id:
+        try:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            sm.save_checkpoint(session_id, "script_data", script_data)
+            sm.update_status(session_id, "SCRIPT_GENERATED", current_step="ASSET_GENERATION")
+            
+            sm.log_api_call(
+                session_id=session_id,
+                step="SCRIPT_GENERATION",
+                service="Gemini 2.5 SDK (google.genai)",
+                request_data={
+                    "topic": topic,
+                    "niche": channel_profile.get("niche", "Psychology"),
+                    "gaps_addressed": content_gaps[:2],
+                    "triggers_targeted": emotional_triggers[:2]
+                },
+                response_data={
+                    "status": "SUCCESS",
+                    "title": script_data.get("title"),
+                    "hook_statement": script_data.get("hook_statement"),
+                    "scene_count": len(script_data.get("scenes", []))
+                },
+                status="SUCCESS",
+                duration_sec=0.0
+            )
+        except Exception as e_sm:
+            print(f"[-] Session logging warning for script: {e_sm}")
 
     print(f"[+] Successfully generated script with {len(script_data['scenes'])} scenes. Saved to {out_file}")
     return script_data

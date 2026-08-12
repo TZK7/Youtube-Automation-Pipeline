@@ -103,7 +103,7 @@ def create_fallback_silent_wav(output_path, text):
     return duration
 
 
-def generate_audio(script_data, voice_settings=None, output_dir=None):
+def generate_audio(script_data, voice_settings=None, output_dir=None, session_id=None):
     """
     Synthesizes audio for each scene in script_data.
     
@@ -113,6 +113,7 @@ def generate_audio(script_data, voice_settings=None, output_dir=None):
       3. Silent WAV fallback (offline)
     
     Saves scene_01.mp3 (or .wav) and calculates exact duration in ms.
+    Logs audit trails and saves checkpoints if session_id is provided.
     """
     if voice_settings is None:
         voice_settings = {}
@@ -180,5 +181,33 @@ def generate_audio(script_data, voice_settings=None, output_dir=None):
             "duration_ms": duration_ms,
             "duration_sec": duration_sec
         })
+
+    # Session Management & Audit Logging
+    s_id = session_id or voice_settings.get("session_id")
+    if s_id:
+        try:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            sm.save_checkpoint(s_id, "audio_assets", audio_results)
+            
+            sm.log_api_call(
+                session_id=s_id,
+                step="AUDIO_SYNTHESIS",
+                service="Fish Audio (OpenRouter)" if openrouter_api_key else f"Edge TTS ({voice_id})",
+                request_data={
+                    "scene_count": len(scenes),
+                    "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts",
+                    "voice_id": fish_voice if openrouter_api_key else voice_id
+                },
+                response_data={
+                    "status": "SUCCESS",
+                    "generated_count": len(audio_results),
+                    "total_duration_sec": round(sum(a["duration_sec"] for a in audio_results), 2)
+                },
+                status="SUCCESS",
+                duration_sec=round(sum(a["duration_sec"] for a in audio_results), 2)
+            )
+        except Exception as e_sm:
+            print(f"[-] Session logging warning for audio: {e_sm}")
 
     return audio_results

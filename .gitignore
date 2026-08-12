@@ -35,6 +35,8 @@ test_*.py
 
 # Data (regenerated at runtime)
 data/competitor_insights.json
+data/sessions/
+data/test_*
 
 # Large media assets (generated at runtime)
 data/audio_assets/
