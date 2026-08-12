@@ -51,7 +51,7 @@ def _create_subtitle_image(text, width=1920, height=1080):
     return np.array(img)
 
 
-def assemble_video(script_data, audio_assets, video_assets, visual_settings=None, output_filepath=None):
+def assemble_video(script_data, audio_assets, video_assets, visual_settings=None, output_filepath=None, session_id=None):
     """
     MoviePy Timeline Assembly (MoviePy 1.x & 2.x compatible):
     - Synchronizes video clip duration to exact audio length.
@@ -61,10 +61,15 @@ def assemble_video(script_data, audio_assets, video_assets, visual_settings=None
     - Renders final 1080p 30fps MP4.
     """
     print("[+] Assembling final timeline with MoviePy...")
-    
+
     if output_filepath is None:
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        output_filepath = os.path.join(base_dir, "data", "outputs", "final_video.mp4")
+        if session_id:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            output_filepath = os.path.join(sm.get_session_dir(session_id), "final_video.mp4")
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            output_filepath = os.path.join(base_dir, "data", "outputs", "final_video.mp4")
     os.makedirs(os.path.dirname(output_filepath), exist_ok=True)
     
     try:

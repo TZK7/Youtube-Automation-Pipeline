@@ -19,7 +19,7 @@ def fetch_curlcffi_transcript(video_id):
     try:
         from curl_cffi import requests
         url = f"https://www.youtube.com/watch?v={video_id}"
-        r = requests.get(url, impersonate="chrome120", timeout=5)
+        r = requests.get(url, impersonate="chrome120", timeout=12)
         m_captions = re.search(r'"captionTracks":\s*(\[.*?\])', r.text)
         if m_captions:
             tracks = json.loads(m_captions.group(1))
@@ -27,26 +27,31 @@ def fetch_curlcffi_transcript(video_id):
                 b_url = t.get("baseUrl")
                 if b_url:
                     json3_url = b_url + "&fmt=json3" if "fmt=" not in b_url else re.sub(r'fmt=[^&]+', 'fmt=json3', b_url)
-                    r_sub = requests.get(json3_url, impersonate="chrome120", timeout=5)
+                    r_sub = requests.get(json3_url, impersonate="chrome120", timeout=12)
                     if r_sub.status_code == 200:
                         c_json = r_sub.json()
                         text_parts = [seg["utf8"] for ev in c_json.get("events", []) for seg in ev.get("segs", []) if "utf8" in seg]
                         full_txt = re.sub(r'\s+', ' ', " ".join(text_parts)).strip()
                         if len(full_txt) > 20:
-                            return full_txt[:1500]
+                            return full_txt[:3000]
     except Exception:
         pass
     return ""
 
-def fetch_video_transcript(video_id, video_title="", video_desc="", gemini_api_key=None):
+def fetch_video_transcript(video_id, video_title="", video_desc="", gemini_api_key=None, return_source=False):
     """
     Fetches raw transcript or raw description text.
     PURE RAW TEXT ONLY - NO PREFIXES OR GENERATED SUMMARY STRINGS.
+    If return_source=True, returns (text, source) where source is one of:
+    'captions', 'transcript_api', 'description', 'gemini_search', 'none'.
     """
+    def _ret(text, source):
+        return (text, source) if return_source else text
+
     # 1. Try curl_cffi Chrome TLS impersonation
     curled = fetch_curlcffi_transcript(video_id)
     if len(curled) > 20:
-        return curled
+        return _ret(curled, "captions")
 
     # 2. Try youtube_transcript_api library
     try:
@@ -62,7 +67,7 @@ def fetch_video_transcript(video_id, video_title="", video_desc="", gemini_api_k
                 raw_text = " ".join([getattr(s, 'text', str(s)) for s in data])
                 clean = re.sub(r'\s+', ' ', raw_text).strip()
                 if len(clean) > 20:
-                    return clean[:1500]
+                    return _ret(clean[:3000], "transcript_api")
             except Exception:
                 continue
     except Exception:
@@ -72,7 +77,7 @@ def fetch_video_transcript(video_id, video_title="", video_desc="", gemini_api_k
     clean_desc = re.sub(r'https?://\S+', '', video_desc).strip()
     clean_desc = re.sub(r'\s+', ' ', clean_desc)
     if len(clean_desc) > 30:
-        return clean_desc[:1000]
+        return _ret(clean_desc[:2000], "description")
 
     # 4. Fallback: Use Gemini Pro with Google Search Grounding to find the transcript online
     if gemini_api_key:
@@ -90,13 +95,13 @@ def fetch_video_transcript(video_id, video_title="", video_desc="", gemini_api_k
                     if resp and resp.text:
                         clean_ai = re.sub(r'\s+', ' ', resp.text).strip()
                         if len(clean_ai) > 20:
-                            return clean_ai[:1500]
+                            return _ret(clean_ai[:3000], "gemini_search")
                 except Exception:
                     continue
         except Exception:
             pass
 
-    return "Closed captions not available for this video."
+    return _ret("Closed captions not available for this video.", "none")
 
 def clean_html(text):
     if not text:
@@ -107,12 +112,27 @@ def clean_html(text):
     text = re.sub(r'&#39;', "'", text)
     return re.sub(r'\s+', ' ', text).strip()
 
-def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, output_dir=None):
+def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, output_dir=None,
+                        use_cache=True, cache_max_age_hours=72):
     """
     Retrieves ONLY real high-velocity videos matching seed_topic from YouTube Data API v3 or Gemini Search Grounding.
-    Fetches actual spoken transcripts and real user comments.
-    PURE RAW DATA ONLY.
+    Fetches actual spoken transcripts and real user comments (per video).
+    Results are cached in the database by topic — repeated calls within cache_max_age_hours
+    return the stored result WITHOUT re-spending API calls. Pass use_cache=False to force a fresh fetch.
     """
+    # --- RESEARCH CACHE CHECK (avoids re-spending API quota on the same topic) ---
+    if use_cache:
+        try:
+            from backend.database import PipelineDB
+            db = PipelineDB()
+            cached = db.get_research_cache(seed_topic, max_age_hours=cache_max_age_hours)
+            if cached and cached.get("top_videos") and not cached.get("error_notice"):
+                print(f"[+] Research cache HIT for '{seed_topic}' (cached at {cached.get('_cached_at', '?')[:19]}) — no API calls spent.")
+                cached["from_cache"] = True
+                return cached
+        except Exception as e_cache:
+            print(f"[-] Research cache check warning: {e_cache}")
+
     print(f"[+] Fetching real competitor videos & transcripts for topic: '{seed_topic}'...")
     
     if output_dir is None:
@@ -164,10 +184,10 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
                     view_count = int(item['statistics'].get('viewCount', 0))
                     velocity = round(view_count / hours_published, 2)
                     
-                    t_snippet = fetch_video_transcript(vid_id, video_title=v_title, video_desc=v_desc, gemini_api_key=gemini_api_key)
+                    t_snippet, t_source = fetch_video_transcript(vid_id, video_title=v_title, video_desc=v_desc, gemini_api_key=gemini_api_key, return_source=True)
                     if t_snippet:
                         video_transcripts_map[vid_id] = t_snippet
-                        
+
                     videos.append({
                         "video_id": vid_id,
                         "video_url": f"https://www.youtube.com/watch?v={vid_id}",
@@ -177,13 +197,16 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
                         "hours_published": round(hours_published, 1),
                         "view_velocity": velocity,
                         "published_at": item['snippet']['publishedAt'],
-                        "transcript_snippet": t_snippet
+                        "transcript_snippet": t_snippet,
+                        "transcript_source": t_source,
+                        "comments": []
                     })
-                
+
                 videos.sort(key=lambda x: x['view_velocity'], reverse=True)
-                
-                top_3_ids = [v['video_id'] for v in videos[:3]]
-                for vid_id in top_3_ids:
+
+                # PER-VIDEO comments (top 5 videos) so relevance is preserved
+                videos_by_id = {v["video_id"]: v for v in videos}
+                for vid_id in [v['video_id'] for v in videos[:5]]:
                     try:
                         comment_response = youtube.commentThreads().list(
                             videoId=vid_id,
@@ -195,6 +218,7 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
                             raw_text = c_item['snippet']['topLevelComment']['snippet']['textDisplay']
                             cleaned = clean_html(raw_text)
                             if len(cleaned) > 5:
+                                videos_by_id[vid_id]["comments"].append(cleaned)
                                 all_comments.append(cleaned)
                     except Exception as e_c:
                         print(f"[-] Could not fetch comments for video {vid_id}: {e_c}")
@@ -234,10 +258,10 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
                         
                         # Extract transcript
                         v_desc = v_data.get("description", "")
-                        t_snippet = fetch_video_transcript(vid_id, video_title=v_title, video_desc=v_desc, gemini_api_key=gemini_api_key)
+                        t_snippet, t_source = fetch_video_transcript(vid_id, video_title=v_title, video_desc=v_desc, gemini_api_key=gemini_api_key, return_source=True)
                         if t_snippet:
                             video_transcripts_map[vid_id] = t_snippet
-                            
+
                         videos.append({
                             "video_id": vid_id,
                             "video_url": f"https://www.youtube.com/watch?v={vid_id}",
@@ -247,7 +271,9 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
                             "hours_published": round(hours_published, 1),
                             "view_velocity": velocity,
                             "published_at": pub_str,
-                            "transcript_snippet": t_snippet
+                            "transcript_snippet": t_snippet,
+                            "transcript_source": t_source,
+                            "comments": []
                         })
                     except Exception as e_parse:
                         continue
@@ -273,7 +299,7 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
             json.dump(insights, f, indent=2)
         return insights
 
-    # Prepare real payload for Gemini analysis
+    # Prepare real payload for Gemini analysis (per-video transcripts AND per-video comments)
     payload_videos = []
     for v in videos[:5]:
         payload_videos.append({
@@ -281,38 +307,42 @@ def analyze_competitors(seed_topic, youtube_api_key=None, gemini_api_key=None, o
             "channel": v.get("channel"),
             "views": v.get("views"),
             "video_url": v.get("video_url", f"https://www.youtube.com/watch?v={v.get('video_id', '')}"),
-            "transcript_snippet": video_transcripts_map.get(v.get("video_id"), v.get("transcript_snippet", ""))
+            "transcript_snippet": video_transcripts_map.get(v.get("video_id"), v.get("transcript_snippet", "")),
+            "transcript_source": v.get("transcript_source", "unknown"),
+            "audience_comments": v.get("comments", [])[:10]
         })
 
     # Gemini Real Analysis
     tropes = []
     content_gaps = []
     emotional_triggers = []
+    script_pros = []
+    script_cons = []
     analysis_text = ""
 
     if gemini_api_key and gemini_api_key.strip():
         try:
             from google import genai
             from google.genai import types
-            
+
             client = genai.Client(api_key=gemini_api_key.strip())
             prompt = f"""
-You are an expert YouTube Market Intelligence Analyst.
+You are an expert YouTube Market Intelligence Analyst and Script Doctor.
 Perform a deep, highly specific analysis tailored EXCLUSIVELY to topic "{seed_topic}".
-Analyze these ACTUAL competitor video titles, spoken video transcripts, and user comments:
+Analyze these ACTUAL competitor videos. Each video object includes its title, spoken transcript
+(field "transcript_snippet", source noted in "transcript_source"), and its OWN audience comments
+(field "audience_comments") so you can judge each video's script against its own audience reaction:
 
-Real Competitor Videos & Spoken Transcripts:
 {json.dumps(payload_videos, indent=2)}
-
-Real Audience Comments:
-{json.dumps(all_comments[:20], indent=2)}
 
 Synthesize an exact, data-backed analysis for topic "{seed_topic}". Return a JSON object with:
 1. "common_tropes": array of 3-4 specific title & thumbnail tropes observed in these actual videos for "{seed_topic}".
 2. "content_gaps": array of 3-4 specific topics, questions, or scientific mechanisms that were MISSING or EXPLAINED POORLY in these actual spoken transcripts.
 3. "emotional_triggers": array of 3-4 specific pain points, anxieties, or desires expressed in these actual user comments.
-4. "recommended_angle": 1-2 sentence positioning recommendation directly addressing these transcript gaps and comment pain points.
-DO NOT use generic or repeated phrases across topics. Make every point unique to "{seed_topic}".
+4. "script_pros": array of 4-6 SPECIFIC scriptwriting strengths observed in these transcripts that clearly worked (hooks that landed, explanation structures, pacing devices, phrases the audience praised in comments). Each entry must reference what technique it is and why it worked.
+5. "script_cons": array of 4-6 SPECIFIC scriptwriting weaknesses in these transcripts (boring sections, confusing explanations, missing payoffs, things the audience complained about in comments). Each entry must state the flaw and its consequence.
+6. "recommended_angle": 1-2 sentence positioning recommendation directly addressing these transcript gaps and comment pain points.
+DO NOT use generic or repeated phrases across topics. Make every point unique to "{seed_topic}" and grounded in the actual transcripts and comments provided.
 """
             config = types.GenerateContentConfig(
                 response_mime_type="application/json",
@@ -330,6 +360,8 @@ DO NOT use generic or repeated phrases across topics. Make every point unique to
                     tropes = parsed.get("common_tropes", [])
                     content_gaps = parsed.get("content_gaps", [])
                     emotional_triggers = parsed.get("emotional_triggers", [])
+                    script_pros = parsed.get("script_pros", [])
+                    script_cons = parsed.get("script_cons", [])
                     analysis_text = parsed.get("recommended_angle", "")
                     if content_gaps and emotional_triggers:
                         break
@@ -358,12 +390,24 @@ DO NOT use generic or repeated phrases across topics. Make every point unique to
         "common_tropes": tropes,
         "content_gaps": content_gaps,
         "emotional_triggers": emotional_triggers,
-        "recommended_angle": analysis_text
+        "script_pros": script_pros,
+        "script_cons": script_cons,
+        "recommended_angle": analysis_text,
+        "from_cache": False
     }
 
     out_file = os.path.join(output_dir, "competitor_insights.json")
     with open(out_file, "w", encoding="utf-8") as f:
         json.dump(insights, f, indent=2)
+
+    # --- SAVE TO RESEARCH CACHE (so the same topic never re-spends API calls) ---
+    try:
+        from backend.database import PipelineDB
+        db = PipelineDB()
+        db.save_research_cache(seed_topic, insights)
+        print(f"[+] Research result cached in database for topic '{seed_topic}'")
+    except Exception as e_cache:
+        print(f"[-] Research cache save warning: {e_cache}")
 
     print(f"[+] Saved real transcript & comment insights to {out_file}")
     return insights

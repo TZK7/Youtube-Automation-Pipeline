@@ -2,10 +2,11 @@
   "channel_name": "Behavioral Psychology Insights",
   "niche": "Behavioral Psychology, Mindset, and Human Dynamics",
   "voice_settings": {
-    "tts_model": "edge-tts",
-    "voice_id": "en-US-ChristopherNeural",
+    "tts_model": "fish-audio",
     "speed": "+0%",
-    "pitch": "+0Hz"
+    "pitch": "+0Hz",
+    "fish_voice_id": "nova",
+    "voice_id": "en-US-ChristopherNeural"
   },
   "visual_settings": {
     "aspect_ratio": "16:9",
@@ -38,5 +39,6 @@
     "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_184a740c-58e8-4719-9f38-a550b64d2208.jpg",
     "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_aa161b0b-c620-4dd6-be29-ec194a630efd.jpg",
     "C:\\Users\\TUFAIL ZAMAN\\.gemini\\antigravity\\scratch\\youtube_automation_control_center\\data\\reference_images\\default_psychology\\Phoenix_10_Jessica_mid30s_Caucasian_woman_psychologist_should_1_c446731d-306a-4a2f-ab14-2fd5203e3ddc.jpg"
-  ]
+  ],
+  "profile_id": "default_psychology"
 }

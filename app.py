@@ -82,7 +82,13 @@ with st.sidebar:
         st.session_state["active_profile"] = pm.get_profile(selected_p)
         st.rerun()
 
-    st.info(f"**Niche:** {active_profile.get('niche', 'Psychology')}\n\n**Voice:** {active_profile.get('voice_settings', {}).get('voice_id', 'Default')}")
+    vs = active_profile.get("voice_settings", {})
+    tts_m = vs.get("tts_model", "edge-tts")
+    if tts_m == "fish-audio":
+        voice_display = f"Fish Audio ({vs.get('fish_voice_id', 'alloy')})"
+    else:
+        voice_display = vs.get("voice_id", "Default")
+    st.info(f"**Niche:** {active_profile.get('niche', 'Psychology')}\n\n**Voice:** {voice_display}")
 
     st.markdown("---")
     st.subheader("🔒 Server Security (.env)")
@@ -126,7 +132,7 @@ with col2:
     st.markdown("""
     <div class="metric-card">
         <h4>Retention Model</h4>
-        <p style="font-size:1.4rem; font-weight:bold; color:#a855f7;">6-Part Framework</p>
+        <p style="font-size:1.4rem; font-weight:bold; color:#a855f7;">Extended Retention Framework</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -136,7 +142,7 @@ with col3:
         <h4>TTS Engine</h4>
         <p style="font-size:1.4rem; font-weight:bold; color:#34d399;">{}</p>
     </div>
-    """.format("Fish Audio (OpenRouter)" if st.session_state.get("openrouter_api_key") else active_profile.get("voice_settings", {}).get("tts_model", "edge-tts")), unsafe_allow_html=True)
+    """.format(voice_display), unsafe_allow_html=True)
 
 with col4:
     st.markdown("""

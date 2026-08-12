@@ -1,61 +1,60 @@
 {
-  "topic": "Dark Psychology",
-  "title": "The Dark Psychology of Dark Psychology: How to Stay Unshakable",
-  "hook_statement": "THE UNSPOKEN RULE",
+  "title": "The Dark Psychology of Machiavellian Calm: Neuroscience of Power",
+  "hook_statement": "Your Goodness Is Being Exploited",
   "scenes": [
     {
       "scene_number": 1,
-      "retention_stage": "Pattern Interrupt Hook (0-15s)",
-      "spoken_text": "Ever notice how most advice on Dark Psychology completely fails when real tension hits? Most people panic and freeze, giving away their leverage instantly.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in a modern high-rise office holding a clipboard, looking directly at camera with calm intense gaze, dim dramatic lighting",
-      "image_to_video_prompt": "Slow push in on character face, dramatic lighting shift",
-      "on_screen_text": "DON'T FREEZE IN CONFLICT",
-      "target_duration_sec": 7.5
+      "retention_stage": "Part 1: Pattern Interrupt Hook",
+      "spoken_text": "Your inherent politeness isn't a virtue\u2014it's an invitation for predators. While standard hustle culture demands exhausting, noisy effort, true Machiavellian power is silently calculated. It is brutally calm, hidden in plain sight, and designed to make you completely unmanipulatable.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A minimalist, dark-themed corporate board room at night with moody shadows and subtle rim lighting on sleek furniture.",
+      "image_to_video_prompt": "Slow pan across a dark high-rise room, soft neon light reflection shimmering on polished glass.",
+      "on_screen_text": "POLITENESS IS WEAKNESS",
+      "target_duration_sec": 12.0
     },
     {
       "scene_number": 2,
-      "retention_stage": "Anti-Hook Reveal (15-30s)",
-      "spoken_text": "Here is the uncomfortable truth: aggressive confrontation isn't power. Silence is. When you master calculated stillness, the room shifts toward you.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., sitting at a sleek glass desk in a minimalist psychology laboratory, demonstrating a subtle hand gesture of calm authority",
-      "image_to_video_prompt": "Pan left around desk, character maintains calm eye contact",
-      "on_screen_text": "SILENCE IS POWER",
-      "target_duration_sec": 8.0
+      "retention_stage": "Part 2: Anti-Hook Reveal",
+      "spoken_text": "Competitors tell you to 'be calm' to manifest money, but masking your emotions while being exploited only triggers passive self-sabotage. True calm isn't a feel-good emotion\u2014it is a biological weapon designed to strip power from manipulators.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A split cinematic frame with chaotic digital static on the left and a perfectly still, dark marble chessboard on the right.",
+      "image_to_video_prompt": "Fast forward push-in landing directly on the black queen chess piece.",
+      "on_screen_text": "CALM IS A WEAPON",
+      "target_duration_sec": 15.0
     },
     {
       "scene_number": 3,
-      "retention_stage": "Scientific Mechanism (30-60s)",
-      "spoken_text": "Neurologically, when someone attempts a power play, your amygdala triggers an adrenaline spike. By taking a 2-second breath delay, you bypass emotional reaction and activate the prefrontal cortex.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., pointing to a glowing holographic brain diagram displaying active neural pathways in a dark futuristic study",
-      "image_to_video_prompt": "Slow tilt up from glowing brain diagram to character smile",
-      "on_screen_text": "AMYGDALA VS PREFRONTAL",
-      "target_duration_sec": 10.0
+      "retention_stage": "Part 3: Scientific Mechanism",
+      "spoken_text": "When targeted by strategic aggression, your brain triggers an amygdala hijack, forcing either submissive obedience or explosive anger. Machiavellian masters override this instinct by re-routing blood flow directly to the prefrontal cortex, locking in executive function while everyone else panics.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A glowing 3D holographic neural network shifting light intensity from a red amygdala zone to a cold blue prefrontal cortex.",
+      "image_to_video_prompt": "Dynamic push into the glowing prefrontal cortex region as light pulses smoothly.",
+      "on_screen_text": "AMYGDALA VS CONTROL",
+      "target_duration_sec": 25.0
     },
     {
       "scene_number": 4,
-      "retention_stage": "Value Bomb (60-70% mark)",
-      "spoken_text": "The exact script to reset dominance: pause, hold eye contact without blinking, and ask calmly, 'What outcome are you aiming for right now?'",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing before a chalkboard with gold behavioral flowchart notes, making an empowering open-palm gesture",
-      "image_to_video_prompt": "Smooth rack focus from flowchart notes to character",
-      "on_screen_text": "THE REFRAME SCRIPT",
-      "target_duration_sec": 8.5
+      "retention_stage": "Part 4: Value Bomb",
+      "spoken_text": "Before executing high-level power plays, cure passive self-sabotage through deliberate emotional micro-pauses. But mark this ethical boundary: reserve strategic ruthlessness exclusively for external manipulators. Applying these tactics to genuine relationships guarantees social destruction and bitter isolation.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., An elegant hourglass sitting on dark mahogany wood, glowing sand flowing steadily in slow motion.",
+      "image_to_video_prompt": "Macro shot slowly zooming into the glass neck where sand particles fall one by one.",
+      "on_screen_text": "ETHICAL BOUNDARIES",
+      "target_duration_sec": 20.0
     },
     {
       "scene_number": 5,
-      "retention_stage": "Application & Stakes",
-      "spoken_text": "When you apply this frame, you shift from defensive response to executive control. You preserve your energy while forcing the other party to reveal their intent.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., walking confidently through a bright modern gallery corridor with soft ambient lighting",
-      "image_to_video_prompt": "Tracking shot following character walking toward camera",
-      "on_screen_text": "EXECUTIVE CONTROL",
-      "target_duration_sec": 7.5
+      "retention_stage": "Part 5: Application & Stakes",
+      "spoken_text": "Stop exhausting yourself in low-yield hustle traps. When forced obedience is demanded of you, execute silent emotional detachment. By maintaining cold cognitive control, you force aggressive superiors to play on your terms while keeping your true intentions completely invisible.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A moody rain-slicked glass window overlooking a vast city skyline at dusk with deep orange and indigo lighting.",
+      "image_to_video_prompt": "Slow downward tilt along raindrops sliding on glass with glowing city lights blurring softly.",
+      "on_screen_text": "SILENT AUTONOMY",
+      "target_duration_sec": 18.0
     },
     {
       "scene_number": 6,
-      "retention_stage": "Soft CTA",
-      "spoken_text": "Mastering human dynamics takes daily practice. Subscribe to Mindset Dynamics for deeper breakdowns on behavioral psychology every week.",
-      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., standing in warm studio lighting next to a sleek subscribe graphic icon, smiling invitingly",
-      "image_to_video_prompt": "Slow zoom out revealing channel subscribe badge",
-      "on_screen_text": "SUBSCRIBE FOR PSYCHOLOGY",
-      "target_duration_sec": 6.5
+      "retention_stage": "Part 6: Soft CTA",
+      "spoken_text": "If you are ready to break free from forced compliance and master the neuroscience of real power, subscribe to the channel. Comment 'Quiet Control' below to unlock your mental autonomy.",
+      "ai_image_prompt": "Jessica mascot, mid-30s Caucasian female psychologist, blonde hair with soft waves, navy blouse under white lab coat, modern webcomic vector style, clean lines, flat shading., A sleek dark leather notebook opening automatically next to a vintage fountain pen on a polished dark desk.",
+      "image_to_video_prompt": "Overhead camera pushing in smoothly as white light emanates from the blank open pages.",
+      "on_screen_text": "CLAIM YOUR POWER",
+      "target_duration_sec": 10.0
     }
   ]
 }

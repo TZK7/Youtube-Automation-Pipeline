@@ -1,12 +1,10 @@
 import os
 import re
 import datetime
-import importlib
 import streamlit as st
 import pandas as pd
-import backend.competitor_engine as competitor_engine_module
-importlib.reload(competitor_engine_module)
 from backend.competitor_engine import analyze_competitors
+from backend.session_manager import SessionManager
 
 
 st.set_page_config(page_title="Market Research | YouTube Control Center", page_icon="🔍", layout="wide")
@@ -27,6 +25,31 @@ with col_btn:
     st.write(" ")
     st.write(" ")
     run_analysis = st.button("🚀 Run Analysis", type="primary", use_container_width=True)
+
+force_refresh = st.checkbox(
+    "🔄 Force fresh fetch (ignore cached research — spends API quota)",
+    value=False,
+    help="Research results are cached in the database for 72 hours per topic. Leave unchecked to reuse cached data at zero API cost."
+)
+
+# --- RESEARCH HISTORY (cached topics — reload without any API calls) ---
+_sm_hist = SessionManager()
+cached_topics = _sm_hist.db.list_research_cache()
+if cached_topics:
+    with st.expander(f"🗂️ Research History ({len(cached_topics)} cached topics — reload at zero API cost)", expanded=False):
+        for c_idx, c_entry in enumerate(cached_topics):
+            h_col1, h_col2, h_col3 = st.columns([3, 2, 1])
+            with h_col1:
+                st.markdown(f"**{c_entry['seed_topic']}**")
+            with h_col2:
+                st.caption(f"Fetched: {c_entry['created_at'][:19].replace('T', ' ')}")
+            with h_col3:
+                if st.button("📂 Load", key=f"load_hist_{c_idx}"):
+                    cached_data = _sm_hist.db.get_research_cache(c_entry["seed_topic"])
+                    if cached_data:
+                        st.session_state["competitor_insights"] = cached_data
+                        st.session_state["current_topic"] = c_entry["seed_topic"]
+                        st.rerun()
 
 if run_analysis:
     if not topic_input:
@@ -50,13 +73,21 @@ if run_analysis:
             insights = analyze_competitors(
                 seed_topic=topic_input,
                 youtube_api_key=yt_key,
-                gemini_api_key=gem_key
+                gemini_api_key=gem_key,
+                use_cache=not force_refresh
             )
             st.session_state["competitor_insights"] = insights
             if insights.get("error_notice"):
                 st.error(f"⚠️ {insights.get('error_notice')}")
             else:
-                st.success(f"✅ Live Competitor Analysis Complete for '{topic_input}'!")
+                _sm = SessionManager()
+                _active_sid = st.session_state.get("active_session_id")
+                if _active_sid:
+                    _sm.save_research(_active_sid, topic_input, insights)
+                if insights.get("from_cache"):
+                    st.success(f"✅ Loaded from research cache (fetched {insights.get('_cached_at', '?')[:19].replace('T', ' ')}) — no API quota spent! Use 'Force fresh fetch' for new data.")
+                else:
+                    st.success(f"✅ Live Competitor Analysis Complete for '{topic_input}' — result cached for future reuse.")
 
 insights = st.session_state.get("competitor_insights")
 
@@ -112,21 +143,42 @@ if insights and not insights.get("error_notice"):
                 v_id = v.get("video_id", "")
                 v_url = v.get("video_url", f"https://www.youtube.com/watch?v={v_id}")
                 t_snip = v.get("transcript_snippet", "").strip()
-                
+                t_source = v.get("transcript_source", "unknown")
+                source_labels = {
+                    "captions": "🟢 Real spoken captions",
+                    "transcript_api": "🟢 Real spoken transcript",
+                    "description": "🟡 Video description (no captions available)",
+                    "gemini_search": "🟡 AI-found transcript summary",
+                    "none": "🔴 Nothing available",
+                    "unknown": "⚪ Source unknown (older research)"
+                }
+
                 with st.expander(f"Video {idx}: {v.get('title')[:45]}...", expanded=(idx==1)):
                     st.markdown(f"**Channel:** `{v.get('channel')}`")
                     st.markdown(f"🔗 **Direct YouTube Link:** [{v_url}]({v_url})")
+                    st.caption(f"**Text source:** {source_labels.get(t_source, t_source)}")
                     st.write(t_snip)
 
         with t_col2:
-            st.markdown("#### 💬 Top Audience Comments Analyzed")
-            comments = insights.get("top_comments_sample", [])
-            if comments:
-                with st.expander(f"View {len(comments)} Audience Comments Extracted", expanded=True):
-                    for c_idx, comm in enumerate(comments[:8], 1):
-                        st.write(f"**{c_idx}.** {comm}")
+            st.markdown("#### 💬 Audience Comments (Per Video)")
+            has_per_video = any(v.get("comments") for v in top_videos[:5])
+            if has_per_video:
+                for idx, v in enumerate(top_videos[:5], 1):
+                    v_comments = v.get("comments", [])
+                    if not v_comments:
+                        continue
+                    with st.expander(f"Video {idx}: {v.get('title')[:40]}... ({len(v_comments)} comments)", expanded=(idx==1)):
+                        for c_idx, comm in enumerate(v_comments[:10], 1):
+                            st.write(f"**{c_idx}.** {comm}")
             else:
-                st.info("No public comments retrieved for these videos.")
+                comments = insights.get("top_comments_sample", [])
+                if comments:
+                    st.caption("⚠️ Older research data — comments were stored combined. Re-run analysis with 'Force fresh fetch' to get per-video comments.")
+                    with st.expander(f"View {len(comments)} Combined Comments", expanded=True):
+                        for c_idx, comm in enumerate(comments[:8], 1):
+                            st.write(f"**{c_idx}.** {comm}")
+                else:
+                    st.info("No public comments retrieved for these videos.")
 
     st.markdown("---")
     st.markdown("### 🤖 Synthesized Analysis of Transcripts & Comments")
@@ -150,6 +202,23 @@ if insights and not insights.get("error_notice"):
         st.caption("Common patterns used by competitors")
         for trope in insights.get("common_tropes", []):
             st.success(f"• {trope}")
+
+    # --- SCRIPT PROS & CONS (from transcript analysis, fed into script generation) ---
+    script_pros = insights.get("script_pros", [])
+    script_cons = insights.get("script_cons", [])
+    if script_pros or script_cons:
+        st.markdown("---")
+        st.markdown("### ⚖️ Competitor Script Review: Pros & Cons")
+        st.caption("Extracted from competitor transcripts + their audience reactions. These flow directly into the script generation prompt — pros are adopted, cons are avoided.")
+        pc_col1, pc_col2 = st.columns(2)
+        with pc_col1:
+            st.markdown("#### ✅ Script Pros (techniques to adopt)")
+            for p in script_pros:
+                st.success(f"• {p}")
+        with pc_col2:
+            st.markdown("#### ❌ Script Cons (mistakes to avoid)")
+            for c in script_cons:
+                st.error(f"• {c}")
 
     st.markdown("---")
     st.markdown("### 💡 Recommended Positioning Angle")

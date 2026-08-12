@@ -2,13 +2,11 @@ import os
 import wave
 import asyncio
 import contextlib
+import time
 import requests
 
+
 def get_audio_duration(file_path):
-    """
-    Returns exact audio duration in milliseconds and seconds using Python's native wave module
-    or MP3 frame estimation.
-    """
     if not os.path.exists(file_path):
         return 0.0, 0.0
 
@@ -23,19 +21,12 @@ def get_audio_duration(file_path):
         except Exception as e:
             print(f"[-] Error reading wave duration: {e}")
 
-    # Fallback / MP3 estimation based on file size or wave header check
     size_bytes = os.path.getsize(file_path)
-    # Average 128 kbps mp3 = 16000 bytes/sec
     duration_sec = max(1.0, size_bytes / 16000.0)
     return duration_sec * 1000.0, duration_sec
 
 
 def _synthesize_fish_audio(text, voice_id, output_file, api_key):
-    """
-    Synthesizes speech using Fish Audio via OpenRouter API.
-    Returns True on success, False on failure.
-    The response is a raw binary MP3 audio stream.
-    """
     try:
         resp = requests.post(
             "https://openrouter.ai/api/v1/audio/speech",
@@ -73,166 +64,205 @@ async def _synthesize_edge_tts(text, voice_id, output_file, rate="+0%", pitch="+
 
 
 def create_fallback_silent_wav(output_path, text):
-    """
-    Creates a simple WAV audio file with soft synthetic tone matching spoken text length
-    if all TTS engines are offline or unavailable.
-    """
     import math
     import struct
-    
+
     words = len(text.split())
-    # Estimate ~0.4 sec per word, min 3 seconds
     duration = max(3.0, words * 0.45)
     sample_rate = 22050
     num_samples = int(sample_rate * duration)
-    
+
     with wave.open(output_path, 'w') as wav_file:
-        wav_file.setnchannels(1)  # Mono
-        wav_file.setsampwidth(2)  # 16-bit
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
         wav_file.setframerate(sample_rate)
-        
-        # Soft soothing ambient tone
+
         values = []
         for i in range(num_samples):
             t = float(i) / sample_rate
             sample = int(3000 * math.sin(2 * math.pi * 220.0 * t))
             packed_value = struct.pack('<h', sample)
             values.append(packed_value)
-            
+
         wav_file.writeframes(b''.join(values))
     return duration
 
 
-def generate_audio(script_data, voice_settings=None, output_dir=None, session_id=None):
-    """
-    Synthesizes audio for each scene in script_data.
-    
-    Priority order:
-      1. Fish Audio via OpenRouter (if openrouter_api_key provided)
-      2. Edge TTS (Microsoft, free)
-      3. Silent WAV fallback (offline)
-    
-    Saves scene_01.mp3 (or .wav) and calculates exact duration in ms.
-    Logs audit trails and saves checkpoints if session_id is provided.
-    """
+def generate_audio_scene(scene_data, scene_idx, voice_settings, output_dir, session_id=None):
+    """Generates audio for a single scene. Returns a result dict."""
     if voice_settings is None:
         voice_settings = {}
-    
-    # OpenRouter API key for Fish Audio
+
     openrouter_api_key = voice_settings.get("openrouter_api_key", "")
-    
-    # Edge TTS settings (fallback)
+    tts_model = voice_settings.get("tts_model", "edge-tts")
     voice_id = voice_settings.get("voice_id", "en-US-ChristopherNeural")
     fish_voice = voice_settings.get("fish_voice_id", "alloy")
     speed = voice_settings.get("speed", "+0%")
     pitch = voice_settings.get("pitch", "+0Hz")
-    
-    if output_dir is None:
-        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        output_dir = os.path.join(base_dir, "data", "audio_assets")
+
     os.makedirs(output_dir, exist_ok=True)
-    
+
+    spoken_text = scene_data.get("spoken_text", "")
+    output_path = None
+    synthesized = False
+    engine_used = "unknown"
+    api_start = time.time()
+
+    use_fish = (tts_model == "fish-audio" or tts_model == "Fish Audio (OpenRouter)") and openrouter_api_key
+    use_edge = tts_model in ("edge-tts", "")
+
+    if use_fish:
+        mp3_path = os.path.join(output_dir, f"scene_{scene_idx:02d}.mp3")
+        print(f"  [>] Scene {scene_idx}: Trying Fish Audio TTS (voice: {fish_voice})...")
+        if _synthesize_fish_audio(spoken_text, fish_voice, mp3_path, openrouter_api_key):
+            output_path = mp3_path
+            synthesized = True
+            engine_used = f"Fish Audio ({fish_voice})"
+
+    if not synthesized and (use_edge or not synthesized):
+        try:
+            mp3_path = os.path.join(output_dir, f"scene_{scene_idx:02d}.mp3")
+            print(f"  [>] Scene {scene_idx}: Trying edge-tts (voice: {voice_id})...")
+            asyncio.run(_synthesize_edge_tts(spoken_text, voice_id, mp3_path, rate=speed, pitch=pitch))
+            output_path = mp3_path
+            synthesized = True
+            engine_used = f"Edge TTS ({voice_id})"
+        except Exception as e:
+            print(f"  [-] edge-tts synthesis warning for scene {scene_idx}: {e}")
+
+    if not synthesized:
+        output_path = os.path.join(output_dir, f"scene_{scene_idx:02d}.wav")
+        print(f"  [>] Scene {scene_idx}: Using silent WAV fallback...")
+        create_fallback_silent_wav(output_path, spoken_text)
+        engine_used = "Silent WAV Fallback"
+
+    api_duration = time.time() - api_start
+    duration_ms, duration_sec = get_audio_duration(output_path)
+    print(f"  [>] Scene {scene_idx}: {duration_sec:.2f}s ({engine_used}, API: {api_duration:.1f}s) -> {output_path}")
+
+    result = {
+        "scene_number": scene_idx,
+        "spoken_text": spoken_text,
+        "audio_path": output_path,
+        "duration_ms": duration_ms,
+        "duration_sec": duration_sec,
+        "engine_used": engine_used,
+        "api_duration_sec": round(api_duration, 2),
+        "status": "SUCCESS" if synthesized else "FALLBACK"
+    }
+
+    if session_id:
+        try:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            sm.log_api_call(
+                session_id=session_id,
+                step=f"AUDIO_TTS_SCENE_{scene_idx:02d}",
+                service=engine_used,
+                request_data={
+                    "scene_number": scene_idx,
+                    "spoken_text": spoken_text,
+                    "tts_model": tts_model,
+                    "voice_id": fish_voice if use_fish else voice_id
+                },
+                response_data={
+                    "status": result["status"],
+                    "audio_path": output_path,
+                    "duration_sec": round(duration_sec, 2),
+                    "api_duration_sec": round(api_duration, 2),
+                    "file_size_bytes": os.path.getsize(output_path) if os.path.exists(output_path) else 0
+                },
+                status=result["status"],
+                duration_sec=round(api_duration, 2)
+            )
+            sm.increment_counter(session_id, "audio_count")
+        except Exception as e_sm:
+            print(f"[-] Session logging warning for audio scene {scene_idx}: {e_sm}")
+
+    return result
+
+
+def generate_audio(script_data, voice_settings=None, output_dir=None, session_id=None):
+    if voice_settings is None:
+        voice_settings = {}
+
+    if output_dir is None:
+        if session_id:
+            from backend.session_manager import SessionManager
+            sm = SessionManager()
+            output_dir = os.path.join(sm.get_session_dir(session_id), "audio_assets")
+        else:
+            base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            output_dir = os.path.join(base_dir, "data", "audio_assets")
+    os.makedirs(output_dir, exist_ok=True)
+
     scenes = script_data.get("scenes", [])
     audio_results = []
 
-    # Determine which engine we'll use
-    if openrouter_api_key:
-        print(f"[+] Synthesizing audio for {len(scenes)} scenes using Fish Audio (OpenRouter)...")
-    else:
-        print(f"[+] Synthesizing audio for {len(scenes)} scenes using edge-tts voice '{voice_id}'...")
+    tts_model = voice_settings.get("tts_model", "edge-tts")
+    print(f"[+] Synthesizing audio for {len(scenes)} scenes (engine: {tts_model})...")
 
     for idx, scene in enumerate(scenes, 1):
-        spoken_text = scene.get("spoken_text", "")
-        output_path = None
-        synthesized = False
-        
-        # --- Priority 1: Fish Audio via OpenRouter ---
-        if openrouter_api_key and not synthesized:
-            mp3_path = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
-            print(f"  [>] Scene {idx}: Trying Fish Audio TTS...")
-            if _synthesize_fish_audio(spoken_text, fish_voice, mp3_path, openrouter_api_key):
-                output_path = mp3_path
-                synthesized = True
+        existing_mp3 = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
+        existing_wav = os.path.join(output_dir, f"scene_{idx:02d}.wav")
+        if os.path.exists(existing_mp3) and os.path.getsize(existing_mp3) > 100:
+            print(f"  [>] Scene {idx}: Reusing existing audio -> {existing_mp3}")
+            duration_ms, duration_sec = get_audio_duration(existing_mp3)
+            audio_results.append({
+                "scene_number": idx,
+                "spoken_text": scene.get("spoken_text", ""),
+                "audio_path": existing_mp3,
+                "duration_ms": duration_ms,
+                "duration_sec": duration_sec,
+                "engine_used": "cached",
+                "api_duration_sec": 0.0,
+                "status": "CACHED"
+            })
+            continue
+        if os.path.exists(existing_wav) and os.path.getsize(existing_wav) > 100:
+            print(f"  [>] Scene {idx}: Reusing existing audio -> {existing_wav}")
+            duration_ms, duration_sec = get_audio_duration(existing_wav)
+            audio_results.append({
+                "scene_number": idx,
+                "spoken_text": scene.get("spoken_text", ""),
+                "audio_path": existing_wav,
+                "duration_ms": duration_ms,
+                "duration_sec": duration_sec,
+                "engine_used": "cached",
+                "api_duration_sec": 0.0,
+                "status": "CACHED"
+            })
+            continue
 
-        # --- Priority 2: Edge TTS (Microsoft) ---
-        if not synthesized:
-            try:
-                mp3_path = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
-                print(f"  [>] Scene {idx}: Trying edge-tts...")
-                asyncio.run(_synthesize_edge_tts(spoken_text, voice_id, mp3_path, rate=speed, pitch=pitch))
-                output_path = mp3_path
-                synthesized = True
-            except Exception as e:
-                print(f"  [-] edge-tts synthesis warning for scene {idx}: {e}")
-        
-        # --- Priority 3: Silent WAV fallback ---
-        if not synthesized:
-            output_path = os.path.join(output_dir, f"scene_{idx:02d}.wav")
-            print(f"  [>] Scene {idx}: Using silent WAV fallback...")
-            create_fallback_silent_wav(output_path, spoken_text)
+        result = generate_audio_scene(scene, idx, voice_settings, output_dir, session_id)
+        audio_results.append(result)
 
-        duration_ms, duration_sec = get_audio_duration(output_path)
-        print(f"  [>] Scene {idx}: {duration_sec:.2f}s ({duration_ms:.0f}ms) -> {output_path}")
-
-        audio_results.append({
-            "scene_number": idx,
-            "spoken_text": spoken_text,
-            "audio_path": output_path,
-            "duration_ms": duration_ms,
-            "duration_sec": duration_sec
-        })
-
-        # Granular per-scene TTS Audit Trail logging
-        s_id = session_id or voice_settings.get("session_id")
-        if s_id:
-            try:
-                from backend.session_manager import SessionManager
-                sm = SessionManager()
-                sm.log_api_call(
-                    session_id=s_id,
-                    step=f"AUDIO_TTS_SCENE_{idx:02d}",
-                    service="Fish Audio (OpenRouter)" if (openrouter_api_key and "mp3" in output_path) else f"Edge TTS ({voice_id})",
-                    request_data={
-                        "scene_number": idx,
-                        "spoken_text": spoken_text,
-                        "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts",
-                        "voice_id": fish_voice if openrouter_api_key else voice_id
-                    },
-                    response_data={
-                        "status": "SUCCESS" if synthesized else "FALLBACK",
-                        "audio_path": output_path,
-                        "duration_sec": round(duration_sec, 2),
-                        "file_size_bytes": os.path.getsize(output_path) if os.path.exists(output_path) else 0
-                    },
-                    status="SUCCESS" if synthesized else "FALLBACK",
-                    duration_sec=round(duration_sec, 2)
-                )
-            except Exception as e_sm:
-                print(f"[-] Session logging warning for audio scene {idx}: {e_sm}")
-
-    # Session Management Checkpoint & Summary Logging
-    s_id = session_id or voice_settings.get("session_id")
+    s_id = session_id
     if s_id:
         try:
             from backend.session_manager import SessionManager
             sm = SessionManager()
             sm.save_checkpoint(s_id, "audio_assets", audio_results)
-            
+
+            cached = sum(1 for a in audio_results if a["status"] == "CACHED")
+            generated = sum(1 for a in audio_results if a["status"] == "SUCCESS")
+            fallback = sum(1 for a in audio_results if a["status"] == "FALLBACK")
+
             sm.log_api_call(
                 session_id=s_id,
                 step="AUDIO_SYNTHESIS_SUMMARY",
-                service="Fish Audio (OpenRouter)" if openrouter_api_key else f"Edge TTS ({voice_id})",
-                request_data={
-                    "total_scenes": len(scenes),
-                    "engine": "fish-audio/s2.1-pro-free:free" if openrouter_api_key else "edge-tts"
-                },
+                service=voice_settings.get("tts_model", "edge-tts"),
+                request_data={"total_scenes": len(scenes)},
                 response_data={
-                    "status": "SUCCESS",
-                    "generated_count": len(audio_results),
-                    "total_duration_sec": round(sum(a["duration_sec"] for a in audio_results), 2)
+                    "status": "SUCCESS" if fallback == 0 else "PARTIAL",
+                    "generated_count": generated,
+                    "cached_count": cached,
+                    "fallback_count": fallback,
+                    "total_duration_sec": round(sum(a["duration_sec"] for a in audio_results), 2),
+                    "total_api_duration_sec": round(sum(a["api_duration_sec"] for a in audio_results), 2)
                 },
-                status="SUCCESS",
-                duration_sec=round(sum(a["duration_sec"] for a in audio_results), 2)
+                status="SUCCESS" if fallback == 0 else "PARTIAL",
+                duration_sec=round(sum(a["api_duration_sec"] for a in audio_results), 2)
             )
         except Exception as e_sm:
             print(f"[-] Session logging warning for audio summary: {e_sm}")

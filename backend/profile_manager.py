@@ -55,6 +55,7 @@ class ProfileManager:
         safe_id = "".join(c for c in profile_id if c.isalnum() or c in ("_", "-")).strip()
         if not safe_id:
             safe_id = "channel_profile"
+        profile_data["profile_id"] = safe_id
         filepath = os.path.join(self.profiles_dir, f"{safe_id}.json")
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(profile_data, f, indent=2)

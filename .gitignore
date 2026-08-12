@@ -44,3 +44,9 @@ data/video_assets/
 data/outputs/
 data/reference_images/
 ready_to_upload/
+
+# Runtime database (user session data)
+data/pipeline.db
+data/pipeline.db-wal
+data/pipeline.db-shm
+data/.db_migrated
