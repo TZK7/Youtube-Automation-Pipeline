@@ -53,9 +53,26 @@ with tab1:
     st.subheader("📝 Step 1: AI Retention Scriptwriter")
     st.markdown("Generates a retention-focused script using Gemini 2.5 with the **6-Part Retention Framework**.")
     
-    st.markdown(f"**Character Anchor Prompt String (Will be prepended to all prompts):**")
+    st.markdown(f"**Character Anchor Prompt String (Will be prepended to all visual prompts):**")
     anchor_str = active_profile.get("character_anchor", "").strip()
-    st.code(anchor_str if anchor_str else "No character anchor specified in profile!", language="text")
+    
+    edited_anchor = st.text_area(
+        "Edit Character Anchor Prompt String",
+        value=anchor_str,
+        height=90,
+        key="editable_character_anchor",
+        help="Edit the character/art aesthetic description. This prompt string will be automatically prepended to all visual prompts."
+    ).strip()
+    
+    # Save edits to active profile in real time
+    if edited_anchor and edited_anchor != anchor_str:
+        active_profile["character_anchor"] = edited_anchor
+        p_id = st.session_state.get("active_profile_id", "default_psychology")
+        pm.save_profile(p_id, active_profile)
+        st.session_state["active_profile"] = active_profile
+        st.toast("✅ Character Anchor updated & saved to profile!")
+        
+    anchor_str = edited_anchor
 
     if st.button("✨ Generate AI Script", type="primary"):
         # Validation checks prior to script generation
