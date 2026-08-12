@@ -2,6 +2,7 @@ import os
 import wave
 import asyncio
 import contextlib
+import requests
 
 def get_audio_duration(file_path):
     """
@@ -29,6 +30,42 @@ def get_audio_duration(file_path):
     return duration_sec * 1000.0, duration_sec
 
 
+def _synthesize_fish_audio(text, voice_id, output_file, api_key):
+    """
+    Synthesizes speech using Fish Audio via OpenRouter API.
+    Returns True on success, False on failure.
+    The response is a raw binary MP3 audio stream.
+    """
+    try:
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/audio/speech",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://youtube-automation-pipeline.local",
+                "X-Title": "YouTube Automation Pipeline"
+            },
+            json={
+                "model": "fish-audio/s2.1-pro-free:free",
+                "input": text,
+                "voice": voice_id or "alloy",
+                "response_format": "mp3"
+            },
+            timeout=60
+        )
+        if resp.status_code == 200 and len(resp.content) > 100:
+            with open(output_file, "wb") as f:
+                f.write(resp.content)
+            print(f"    [✓] Fish Audio TTS success: {len(resp.content)} bytes")
+            return True
+        else:
+            print(f"    [✗] Fish Audio TTS returned status {resp.status_code}: {resp.text[:200]}")
+            return False
+    except Exception as e:
+        print(f"    [✗] Fish Audio TTS error: {e}")
+        return False
+
+
 async def _synthesize_edge_tts(text, voice_id, output_file, rate="+0%", pitch="+0Hz"):
     import edge_tts
     communicate = edge_tts.Communicate(text, voice_id, rate=rate, pitch=pitch)
@@ -38,7 +75,7 @@ async def _synthesize_edge_tts(text, voice_id, output_file, rate="+0%", pitch="+
 def create_fallback_silent_wav(output_path, text):
     """
     Creates a simple WAV audio file with soft synthetic tone matching spoken text length
-    if edge-tts network is offline or uninstalled.
+    if all TTS engines are offline or unavailable.
     """
     import math
     import struct
@@ -68,12 +105,24 @@ def create_fallback_silent_wav(output_path, text):
 
 def generate_audio(script_data, voice_settings=None, output_dir=None):
     """
-    Synthesizes audio for each scene in script_data using edge-tts.
-    Saves scene_01.wav, scene_02.wav, etc. and calculates exact duration in ms.
+    Synthesizes audio for each scene in script_data.
+    
+    Priority order:
+      1. Fish Audio via OpenRouter (if openrouter_api_key provided)
+      2. Edge TTS (Microsoft, free)
+      3. Silent WAV fallback (offline)
+    
+    Saves scene_01.mp3 (or .wav) and calculates exact duration in ms.
     """
     if voice_settings is None:
         voice_settings = {}
+    
+    # OpenRouter API key for Fish Audio
+    openrouter_api_key = voice_settings.get("openrouter_api_key", "")
+    
+    # Edge TTS settings (fallback)
     voice_id = voice_settings.get("voice_id", "en-US-ChristopherNeural")
+    fish_voice = voice_settings.get("fish_voice_id", "alloy")
     speed = voice_settings.get("speed", "+0%")
     pitch = voice_settings.get("pitch", "+0Hz")
     
@@ -85,27 +134,40 @@ def generate_audio(script_data, voice_settings=None, output_dir=None):
     scenes = script_data.get("scenes", [])
     audio_results = []
 
-    print(f"[+] Synthesizing audio for {len(scenes)} scenes using voice '{voice_id}'...")
+    # Determine which engine we'll use
+    if openrouter_api_key:
+        print(f"[+] Synthesizing audio for {len(scenes)} scenes using Fish Audio (OpenRouter)...")
+    else:
+        print(f"[+] Synthesizing audio for {len(scenes)} scenes using edge-tts voice '{voice_id}'...")
 
     for idx, scene in enumerate(scenes, 1):
         spoken_text = scene.get("spoken_text", "")
-        file_name = f"scene_{idx:02d}.wav"
-        output_path = os.path.join(output_dir, file_name)
-        
+        output_path = None
         synthesized = False
-        try:
-            # Use edge-tts
-            mp3_temp = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
-            asyncio.run(_synthesize_edge_tts(spoken_text, voice_id, mp3_temp, rate=speed, pitch=pitch))
-            
-            # If mp3 generated, we can use it directly or convert to wav
-            output_path = mp3_temp
-            synthesized = True
-        except Exception as e:
-            print(f"[-] edge-tts synthesis warning for scene {idx}: {e}")
         
+        # --- Priority 1: Fish Audio via OpenRouter ---
+        if openrouter_api_key and not synthesized:
+            mp3_path = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
+            print(f"  [>] Scene {idx}: Trying Fish Audio TTS...")
+            if _synthesize_fish_audio(spoken_text, fish_voice, mp3_path, openrouter_api_key):
+                output_path = mp3_path
+                synthesized = True
+
+        # --- Priority 2: Edge TTS (Microsoft) ---
+        if not synthesized:
+            try:
+                mp3_path = os.path.join(output_dir, f"scene_{idx:02d}.mp3")
+                print(f"  [>] Scene {idx}: Trying edge-tts...")
+                asyncio.run(_synthesize_edge_tts(spoken_text, voice_id, mp3_path, rate=speed, pitch=pitch))
+                output_path = mp3_path
+                synthesized = True
+            except Exception as e:
+                print(f"  [-] edge-tts synthesis warning for scene {idx}: {e}")
+        
+        # --- Priority 3: Silent WAV fallback ---
         if not synthesized:
             output_path = os.path.join(output_dir, f"scene_{idx:02d}.wav")
+            print(f"  [>] Scene {idx}: Using silent WAV fallback...")
             create_fallback_silent_wav(output_path, spoken_text)
 
         duration_ms, duration_sec = get_audio_duration(output_path)

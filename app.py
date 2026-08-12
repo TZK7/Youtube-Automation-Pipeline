@@ -57,6 +57,7 @@ if "active_profile_id" not in st.session_state:
 
 st.session_state["youtube_api_key"] = os.environ.get("YOUTUBE_API_KEY", "").strip()
 st.session_state["gemini_api_key"] = os.environ.get("GEMINI_API_KEY", "").strip()
+st.session_state["openrouter_api_key"] = os.environ.get("OPENROUTER_API_KEY", "").strip()
 
 # Load Active Profile
 active_profile = pm.get_profile(st.session_state["active_profile_id"])
@@ -88,6 +89,7 @@ with st.sidebar:
     
     gem_key = st.session_state["gemini_api_key"]
     yt_key = st.session_state["youtube_api_key"]
+    or_key = st.session_state["openrouter_api_key"]
     
     if gem_key:
         st.success(f"✅ Gemini API: Connected (`{gem_key[:4]}...{gem_key[-4:]}`)")
@@ -98,6 +100,11 @@ with st.sidebar:
         st.success(f"✅ YouTube API: Connected (`{yt_key[:4]}...{yt_key[-4:]}`)")
     else:
         st.info("ℹ️ YouTube API: Missing in `.env` (Benchmark)")
+
+    if or_key:
+        st.success(f"✅ OpenRouter API: Connected (`{or_key[:4]}...{or_key[-4:]}`)")
+    else:
+        st.warning("⚠️ OpenRouter API: Missing in `.env` (No AI voice/image/video)")
         
     st.caption("Keys are securely loaded from local `.env` file on server startup.")
 
@@ -129,7 +136,7 @@ with col3:
         <h4>TTS Engine</h4>
         <p style="font-size:1.4rem; font-weight:bold; color:#34d399;">{}</p>
     </div>
-    """.format(active_profile.get("voice_settings", {}).get("tts_model", "edge-tts")), unsafe_allow_html=True)
+    """.format("Fish Audio (OpenRouter)" if st.session_state.get("openrouter_api_key") else active_profile.get("voice_settings", {}).get("tts_model", "edge-tts")), unsafe_allow_html=True)
 
 with col4:
     st.markdown("""

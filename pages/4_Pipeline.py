@@ -129,7 +129,7 @@ with tab2:
 # ----------------------------------------------------
 with tab3:
     st.subheader("🔊 Step 3: Audio Synthesis & Visual Asset Review")
-    st.caption("Synthesize TTS voice clips via edge-tts and generate matching visual clips.")
+    st.caption("Synthesize voice clips via Fish Audio (OpenRouter) or edge-tts, and generate AI visual clips via Grok.")
 
     if "script_data" in st.session_state:
         if st.button("🎬 Generate Audio & Video Assets", type="primary"):
@@ -137,17 +137,29 @@ with tab3:
             if not scenes_to_check:
                 st.error("❌ Cannot generate assets: Script contains no valid scenes.")
             else:
-                with st.spinner("Synthesizing edge-tts audio & generating visual scene assets..."):
+                with st.spinner("Synthesizing voice audio & generating AI visual scene assets..."):
+                    # Build voice_settings with OpenRouter key
+                    vs = dict(active_profile.get("voice_settings", {}))
+                    or_key = st.session_state.get("openrouter_api_key", "")
+                    if or_key:
+                        vs["openrouter_api_key"] = or_key
+                    
                     audio_assets = generate_audio(
                         script_data=st.session_state["script_data"],
-                        voice_settings=active_profile.get("voice_settings", {})
+                        voice_settings=vs
                     )
                     st.session_state["audio_assets"] = audio_assets
+                    
+                    # Build api_config with OpenRouter key
+                    api_cfg = {}
+                    if or_key:
+                        api_cfg["openrouter_api_key"] = or_key
                     
                     video_assets = generate_video_assets(
                         script_data=st.session_state["script_data"],
                         audio_assets=audio_assets,
-                        visual_settings=active_profile.get("visual_settings", {})
+                        visual_settings=active_profile.get("visual_settings", {}),
+                        api_config=api_cfg
                     )
                     st.session_state["video_assets"] = video_assets
                     st.success("✅ Assets generated! Preview below.")
